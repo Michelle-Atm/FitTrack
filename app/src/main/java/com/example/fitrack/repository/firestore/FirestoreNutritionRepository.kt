@@ -4,6 +4,7 @@ import com.example.fitrack.model.AlimentOFF
 import com.example.fitrack.model.Repas
 import com.example.fitrack.repository.NutritionRepository
 import com.example.fitrack.repository.api.OFFProduct
+import com.example.fitrack.repository.api.OpenFoodFactsApiService
 import com.example.fitrack.repository.api.RetrofitClient
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -13,7 +14,7 @@ import java.util.concurrent.TimeUnit
 
 class FirestoreNutritionRepository(
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance(),
-    private val offService: com.example.fitrack.repository.api.OpenFoodFactsApiService = RetrofitClient.openFoodFactsService
+    private val offService: OpenFoodFactsApiService = RetrofitClient.openFoodFactsService
 ) : NutritionRepository {
 
     companion object {
