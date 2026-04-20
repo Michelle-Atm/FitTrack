@@ -165,7 +165,7 @@ fun LoginScreen(viewModel: AuthViewModel) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        TextButton(onClick = { /* Navigation vers inscription */ }) {
+        TextButton(onClick = { /* TODO(InscriptionScreen) */ }) {
             Text("Pas encore de compte ? S'inscrire", color = MintFit)
         }
     }

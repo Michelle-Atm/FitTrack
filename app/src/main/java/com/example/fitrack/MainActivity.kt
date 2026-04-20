@@ -34,13 +34,13 @@ class MainActivity : ComponentActivity() {
                 when (uiState) {
                     is AuthViewModel.AuthUiState.Succes -> {
                         val user = (uiState as AuthViewModel.AuthUiState.Succes).utilisateur
-                        // Placeholder — remplacer par la vraie navigation vers HomeScreen
+                        // TODO(HomeScreen) : remplacer par NavHost + HomeScreen
                         Box(
                             modifier = Modifier.fillMaxSize().background(DarkBG),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "Bienvenue ${user.nom.ifBlank { user.email }} 👋",
+                                text = "Bienvenue ${user.nom.ifBlank { user.email }}",
                                 color = MintFit,
                                 fontSize = 22.sp,
                                 fontWeight = FontWeight.Bold
