@@ -7,6 +7,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
 // Nécessite google-services.json pour s'initialiser au runtime.
@@ -25,7 +26,11 @@ class FirestoreAuthRepository(
             if (firebaseUser == null) {
                 trySend(null)
             } else {
-                trySend(User(uid = firebaseUser.uid, email = firebaseUser.email ?: ""))
+                launch {
+                    recupererProfil(firebaseUser.uid)
+                        .onSuccess { trySend(it) }
+                        .onFailure { trySend(User(uid = firebaseUser.uid, email = firebaseUser.email ?: "")) }
+                }
             }
         }
         auth.addAuthStateListener(listener)

@@ -17,6 +17,6 @@ interface OpenFoodFactsApiService {
         @Query("search_terms") terme: String,
         @Query("json") json: Int = 1,
         @Query("page_size") taille: Int = 20,
-        @Query("fields") champs: String = "code,product_name,nutriments,image_url"
+        @Query("fields") champs: String = "code,product_name,nutriments,image_front_url,image_url"
     ): Response<OFFSearchResponse>
 }

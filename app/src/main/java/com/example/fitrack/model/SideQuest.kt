@@ -16,5 +16,6 @@ data class SideQuestUtilisateur(
     val debloquee: Boolean = false,
     val completee: Boolean = false,
     val dateDeblocage: Long = 0L,
-    val dateCompletion: Long = 0L
+    val dateCompletion: Long = 0L,
+    val xpGagnee: Int = 0
 )

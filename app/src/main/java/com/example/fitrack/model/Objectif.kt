@@ -15,5 +15,6 @@ data class Objectif(
     val pasObjectif: Int = 10000,
     val pasActuels: Int = 0,
     val seancesObjectif: Int = 1,
-    val seancesEffectuees: Int = 0
+    val seancesEffectuees: Int = 0,
+    val dateMAJ: Long = 0L
 )

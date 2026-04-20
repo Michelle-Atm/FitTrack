@@ -88,8 +88,8 @@ class ObjectifViewModel(
 
             if (disponiblesResult.isSuccess && utilisateurResult.isSuccess) {
                 _sideQuestUiState.value = SideQuestUiState.Succes(
-                    disponibles = disponiblesResult.getOrDefault(emptyList()),
-                    utilisateur = utilisateurResult.getOrDefault(emptyList())
+                    disponibles = disponiblesResult.getOrThrow(),
+                    utilisateur = utilisateurResult.getOrThrow()
                 )
             } else {
                 val erreur = disponiblesResult.exceptionOrNull() ?: utilisateurResult.exceptionOrNull()
@@ -157,15 +157,25 @@ class ObjectifViewModel(
     }.timeInMillis
 
     private fun incrementerSeancesObjectif(userId: String) {
-        val etat = _objectifUiState.value
-        if (etat is ObjectifUiState.Succes) {
-            val objectifMaj = etat.progression.objectif.copy(
-                seancesEffectuees = etat.progression.objectif.seancesEffectuees + 1
-            )
-            viewModelScope.launch {
-                objectifRepository.mettreAJourObjectif(objectifMaj)
-                _objectifUiState.value = ObjectifUiState.Succes(calculerProgression(objectifMaj))
-            }
+        viewModelScope.launch {
+            val date = debutJournee()
+            objectifRepository.objectifJournalier(userId, date)
+                .onSuccess { objectif ->
+                    val objectifMaj = objectif.copy(
+                        seancesEffectuees = objectif.seancesEffectuees + 1,
+                        dateMAJ = System.currentTimeMillis()
+                    )
+                    objectifRepository.mettreAJourObjectif(objectifMaj)
+                        .onSuccess {
+                            _objectifUiState.value = ObjectifUiState.Succes(calculerProgression(objectifMaj))
+                        }
+                        .onFailure {
+                            _objectifUiState.value = ObjectifUiState.Erreur(it.message ?: "Erreur de mise à jour")
+                        }
+                }
+                .onFailure {
+                    _objectifUiState.value = ObjectifUiState.Erreur(it.message ?: "Objectif journalier introuvable")
+                }
         }
     }
 

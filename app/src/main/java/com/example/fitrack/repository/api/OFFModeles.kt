@@ -16,8 +16,11 @@ data class OFFProduct(
     @SerializedName("code") val code: String = "",
     @SerializedName("product_name") val nom: String = "",
     @SerializedName("nutriments") val nutriments: OFFNutriments = OFFNutriments(),
+    @SerializedName("image_front_url") val imageFrontUrl: String = "",
     @SerializedName("image_url") val imageUrl: String = ""
-)
+) {
+    val imageUrlEffective: String get() = imageFrontUrl.ifBlank { imageUrl }
+}
 
 data class OFFNutriments(
     @SerializedName("energy-kcal_100g") val calories: Double = 0.0,

@@ -103,6 +103,6 @@ class FirestoreNutritionRepository(
         glucides = nutriments.glucides,
         lipides = nutriments.lipides,
         fibres = nutriments.fibres,
-        imageUrl = imageUrl
+        imageUrl = imageUrlEffective
     )
 }

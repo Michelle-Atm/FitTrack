@@ -65,7 +65,7 @@ class NutritionViewModel(
         viewModelScope.launch {
             nutritionRepository.historiqueRepas(userId, jours)
                 .onSuccess { _historiqueRepas.value = it }
-                .onFailure { /* historique silencieux */ }
+                .onFailure { /* échec silencieux : l'historique est un affichage secondaire, pas bloquant */ }
         }
     }
 
