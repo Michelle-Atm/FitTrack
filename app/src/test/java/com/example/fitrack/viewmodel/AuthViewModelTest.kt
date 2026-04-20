@@ -179,6 +179,17 @@ class AuthViewModelTest {
         assertEquals("Identifiants invalides", (state as AuthViewModel.AuthUiState.Erreur).message)
     }
 
+    @Test
+    fun `connexion succes meme si profil Firestore absent`() = runTest {
+        // Simule un compte créé via la console Firebase sans profil Firestore
+        val userMinimal = User(uid = "uid1", email = "console@test.com")
+        repo.connexionResult = Result.success(userMinimal)
+        viewModel.connexion("console@test.com", "password123")
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value is AuthViewModel.AuthUiState.Succes)
+        assertEquals("console@test.com", (viewModel.uiState.value as AuthViewModel.AuthUiState.Succes).utilisateur.email)
+    }
+
     // --- inscrire (validation) ---
 
     @Test

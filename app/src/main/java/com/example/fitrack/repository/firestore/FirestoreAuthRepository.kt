@@ -40,8 +40,16 @@ class FirestoreAuthRepository(
     override suspend fun connexion(email: String, motDePasse: String): Result<User> {
         return try {
             val result = auth.signInWithEmailAndPassword(email, motDePasse).await()
-            val uid = result.user?.uid ?: return Result.failure(Exception("UID introuvable"))
-            recupererProfil(uid)
+            val firebaseUser = result.user ?: return Result.failure(Exception("UID introuvable"))
+            val profil = recupererProfil(firebaseUser.uid)
+            if (profil.isSuccess) {
+                profil
+            } else {
+                // Aucun profil Firestore (compte créé via la console) → on crée un profil minimal
+                val userMinimal = User(uid = firebaseUser.uid, email = firebaseUser.email ?: email)
+                db.collection(COLLECTION_USERS).document(firebaseUser.uid).set(userMinimal).await()
+                Result.success(userMinimal)
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }
