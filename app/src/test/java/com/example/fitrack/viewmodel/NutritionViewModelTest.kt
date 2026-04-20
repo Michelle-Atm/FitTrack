@@ -1,7 +1,9 @@
 package com.example.fitrack.viewmodel
 
 import com.example.fitrack.fakes.FakeNutritionRepository
+import com.example.fitrack.fakes.FakeObjectifRepository
 import com.example.fitrack.model.AlimentOFF
+import com.example.fitrack.model.Objectif
 import com.example.fitrack.model.Repas
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -22,13 +24,15 @@ class NutritionViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var repo: FakeNutritionRepository
+    private lateinit var objectifRepo: FakeObjectifRepository
     private lateinit var viewModel: NutritionViewModel
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         repo = FakeNutritionRepository()
-        viewModel = NutritionViewModel(repo)
+        objectifRepo = FakeObjectifRepository()
+        viewModel = NutritionViewModel(repo, objectifRepo)
     }
 
     @After
@@ -72,6 +76,47 @@ class NutritionViewModelTest {
         assertEquals(130.0, totaux.glucides, 0.0)
         assertEquals(28.0, totaux.lipides, 0.0)
         assertEquals(12.0, totaux.fibres, 0.0)
+    }
+
+    // --- calculerComparaison ---
+
+    @Test
+    fun `calculerComparaison retourne pourcentages corrects`() {
+        val totaux = NutritionViewModel.TotauxJournaliers(calories = 1500.0, proteines = 75.0, glucides = 200.0, lipides = 50.0)
+        val objectif = Objectif(caloriesObjectif = 2000.0, proteinesObjectif = 150.0, glucidesObjectif = 250.0, lipidesObjectif = 65.0)
+        val comp = viewModel.calculerComparaison(totaux, objectif)
+        assertEquals(0.75f, comp.pourcentageCalories, 0.001f)
+        assertEquals(0.5f, comp.pourcentageProteines, 0.001f)
+        assertEquals(0.8f, comp.pourcentageGlucides, 0.001f)
+    }
+
+    @Test
+    fun `calculerComparaison retourne restantes correctes`() {
+        val totaux = NutritionViewModel.TotauxJournaliers(calories = 800.0, proteines = 60.0, glucides = 100.0, lipides = 30.0)
+        val objectif = Objectif(caloriesObjectif = 2000.0, proteinesObjectif = 150.0, glucidesObjectif = 250.0, lipidesObjectif = 65.0)
+        val comp = viewModel.calculerComparaison(totaux, objectif)
+        assertEquals(1200.0, comp.caloriesRestantes, 0.001)
+        assertEquals(90.0, comp.proteinesRestantes, 0.001)
+        assertEquals(150.0, comp.glucidesRestantes, 0.001)
+        assertEquals(35.0, comp.lipidesRestantes, 0.001)
+    }
+
+    @Test
+    fun `calculerComparaison retourne restantes negatives si depassement`() {
+        val totaux = NutritionViewModel.TotauxJournaliers(calories = 2500.0, proteines = 0.0, glucides = 0.0, lipides = 0.0)
+        val objectif = Objectif(caloriesObjectif = 2000.0)
+        val comp = viewModel.calculerComparaison(totaux, objectif)
+        assertEquals(-500.0, comp.caloriesRestantes, 0.001)
+        assertTrue(comp.pourcentageCalories > 1.0f)
+    }
+
+    @Test
+    fun `calculerComparaison retourne zero si objectif a zero`() {
+        val totaux = NutritionViewModel.TotauxJournaliers(calories = 500.0, proteines = 30.0, glucides = 0.0, lipides = 0.0)
+        val objectif = Objectif(caloriesObjectif = 0.0, proteinesObjectif = 0.0)
+        val comp = viewModel.calculerComparaison(totaux, objectif)
+        assertEquals(0f, comp.pourcentageCalories, 0.0f)
+        assertEquals(0f, comp.pourcentageProteines, 0.0f)
     }
 
     // --- debutJournee ---
@@ -173,6 +218,31 @@ class NutritionViewModelTest {
         val succes = state as NutritionViewModel.NutritionUiState.Succes
         assertEquals(1, succes.repas.size)
         assertEquals(600.0, succes.totaux.calories, 0.0)
+    }
+
+    @Test
+    fun `chargerRepasJournaliers expose comparaison avec objectif`() = runTest {
+        val repas = listOf(Repas(calories = 1200.0, proteines = 60.0, glucides = 150.0, lipides = 40.0))
+        repo.repasJournalierResult = Result.success(repas)
+        objectifRepo.objectifJournalierResult = Result.success(
+            Objectif(caloriesObjectif = 2000.0, proteinesObjectif = 150.0, glucidesObjectif = 250.0, lipidesObjectif = 65.0)
+        )
+        viewModel.chargerRepasJournaliers("u1")
+        advanceUntilIdle()
+        val succes = viewModel.uiState.value as NutritionViewModel.NutritionUiState.Succes
+        assertEquals(0.6f, succes.comparaison.pourcentageCalories, 0.001f)
+        assertEquals(800.0, succes.comparaison.caloriesRestantes, 0.001)
+    }
+
+    @Test
+    fun `chargerRepasJournaliers comparaison vide si objectif absent`() = runTest {
+        repo.repasJournalierResult = Result.success(listOf(Repas(calories = 600.0)))
+        objectifRepo.objectifJournalierResult = Result.failure(Exception("Pas d'objectif"))
+        viewModel.chargerRepasJournaliers("u1")
+        advanceUntilIdle()
+        val succes = viewModel.uiState.value as NutritionViewModel.NutritionUiState.Succes
+        assertEquals(0f, succes.comparaison.pourcentageCalories)
+        assertEquals(0.0, succes.comparaison.caloriesRestantes, 0.0)
     }
 
     @Test

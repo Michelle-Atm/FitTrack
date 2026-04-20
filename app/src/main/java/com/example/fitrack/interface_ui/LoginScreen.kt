@@ -22,11 +22,10 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.fitrack.ui.theme.DarkBG
+import com.example.fitrack.ui.theme.MintFit
+import com.example.fitrack.ui.theme.VioletFit
 import com.example.fitrack.viewmodel.AuthViewModel
-
-val DarkBG = Color(0xFF0E0E18)
-val VioletFit = Color(0xFF7F77DD)
-val MintFit = Color(0xFF00D68F)
 
 @Composable
 fun LoginScreen(viewModel: AuthViewModel) {

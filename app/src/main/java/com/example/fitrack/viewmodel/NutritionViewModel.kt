@@ -4,9 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.fitrack.model.AlimentOFF
+import com.example.fitrack.model.Objectif
 import com.example.fitrack.model.Repas
 import com.example.fitrack.repository.NutritionRepository
+import com.example.fitrack.repository.ObjectifRepository
 import com.example.fitrack.repository.firestore.FirestoreNutritionRepository
+import com.example.fitrack.repository.firestore.FirestoreObjectifRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,7 +17,8 @@ import kotlinx.coroutines.launch
 import java.util.Calendar
 
 class NutritionViewModel(
-    private val nutritionRepository: NutritionRepository = FirestoreNutritionRepository()
+    private val nutritionRepository: NutritionRepository = FirestoreNutritionRepository(),
+    private val objectifRepository: ObjectifRepository = FirestoreObjectifRepository()
 ) : ViewModel() {
 
     data class TotauxJournaliers(
@@ -25,10 +29,25 @@ class NutritionViewModel(
         val fibres: Double = 0.0
     )
 
+    data class ComparaisonObjectifs(
+        val pourcentageCalories: Float = 0f,
+        val pourcentageProteines: Float = 0f,
+        val pourcentageGlucides: Float = 0f,
+        val pourcentageLipides: Float = 0f,
+        val caloriesRestantes: Double = 0.0,
+        val proteinesRestantes: Double = 0.0,
+        val glucidesRestantes: Double = 0.0,
+        val lipidesRestantes: Double = 0.0
+    )
+
     sealed class NutritionUiState {
         object Initial : NutritionUiState()
         object Chargement : NutritionUiState()
-        data class Succes(val repas: List<Repas>, val totaux: TotauxJournaliers) : NutritionUiState()
+        data class Succes(
+            val repas: List<Repas>,
+            val totaux: TotauxJournaliers,
+            val comparaison: ComparaisonObjectifs = ComparaisonObjectifs()
+        ) : NutritionUiState()
         data class Erreur(val message: String) : NutritionUiState()
     }
 
@@ -53,7 +72,11 @@ class NutritionViewModel(
             _uiState.value = NutritionUiState.Chargement
             nutritionRepository.repasJournalier(userId, date, date + 86_400_000L)
                 .onSuccess { repas ->
-                    _uiState.value = NutritionUiState.Succes(repas, calculerTotaux(repas))
+                    val totaux = calculerTotaux(repas)
+                    val comparaison = objectifRepository.objectifJournalier(userId, date)
+                        .map { calculerComparaison(totaux, it) }
+                        .getOrDefault(ComparaisonObjectifs())
+                    _uiState.value = NutritionUiState.Succes(repas, totaux, comparaison)
                 }
                 .onFailure {
                     _uiState.value = NutritionUiState.Erreur(it.message ?: "Erreur de chargement")
@@ -130,6 +153,22 @@ class NutritionViewModel(
         fibres = repas.sumOf { it.fibres }
     )
 
+    fun calculerComparaison(totaux: TotauxJournaliers, objectif: Objectif): ComparaisonObjectifs {
+        fun pct(actuel: Double, cible: Double): Float =
+            if (cible > 0) (actuel / cible).toFloat() else 0f
+
+        return ComparaisonObjectifs(
+            pourcentageCalories = pct(totaux.calories, objectif.caloriesObjectif),
+            pourcentageProteines = pct(totaux.proteines, objectif.proteinesObjectif),
+            pourcentageGlucides = pct(totaux.glucides, objectif.glucidesObjectif),
+            pourcentageLipides = pct(totaux.lipides, objectif.lipidesObjectif),
+            caloriesRestantes = objectif.caloriesObjectif - totaux.calories,
+            proteinesRestantes = objectif.proteinesObjectif - totaux.proteines,
+            glucidesRestantes = objectif.glucidesObjectif - totaux.glucides,
+            lipidesRestantes = objectif.lipidesObjectif - totaux.lipides
+        )
+    }
+
     fun debutJournee(timestamp: Long = System.currentTimeMillis()): Long {
         return Calendar.getInstance().apply {
             timeInMillis = timestamp
@@ -140,9 +179,12 @@ class NutritionViewModel(
         }.timeInMillis
     }
 
-    class Factory(private val repository: NutritionRepository) : ViewModelProvider.Factory {
+    class Factory(
+        private val nutritionRepository: NutritionRepository,
+        private val objectifRepository: ObjectifRepository
+    ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
-            NutritionViewModel(repository) as T
+            NutritionViewModel(nutritionRepository, objectifRepository) as T
     }
 }

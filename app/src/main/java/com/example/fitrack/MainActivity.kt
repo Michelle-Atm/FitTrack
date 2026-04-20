@@ -15,9 +15,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import com.example.fitrack.interface_ui.DarkBG
 import com.example.fitrack.interface_ui.LoginScreen
-import com.example.fitrack.interface_ui.MintFit
+import com.example.fitrack.ui.theme.DarkBG
+import com.example.fitrack.ui.theme.MintFit
 import com.example.fitrack.ui.theme.FitrackTheme
 import com.example.fitrack.viewmodel.AuthViewModel
 

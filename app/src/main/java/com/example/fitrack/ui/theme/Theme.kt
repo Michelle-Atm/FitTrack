@@ -40,7 +40,7 @@ fun FitrackTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography, // Si Typography est en rouge, clique et fais Alt+Entrée
+        typography = Typography,
         content = content
     )
 }
