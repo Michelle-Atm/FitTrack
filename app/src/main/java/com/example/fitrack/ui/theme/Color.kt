@@ -1,6 +1,6 @@
 package com.example.fitrack.ui.theme
 
-import androidx.compose.ui.graphics.Color // <--- CETTE LIGNE EST INDISPENSABLE
+import androidx.compose.ui.graphics.Color
 
 val DarkBG = Color(0xFF0E0E18)
 val CardBG = Color(0xFF1A1A2E)
