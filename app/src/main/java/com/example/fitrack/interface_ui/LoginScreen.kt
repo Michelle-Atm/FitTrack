@@ -3,25 +3,42 @@ package com.example.fitrack.interface_ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.fitrack.viewmodel.AuthViewModel
 
-// Définition directe des couleurs pour éviter les erreurs d'import du thème
 val DarkBG = Color(0xFF0E0E18)
 val VioletFit = Color(0xFF7F77DD)
 val MintFit = Color(0xFF00D68F)
 
 @Composable
-fun LoginScreen() {
-    // Variables pour stocker ce que l'utilisateur écrit
+fun LoginScreen(viewModel: AuthViewModel) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
+
+    val uiState by viewModel.uiState.collectAsState()
+
+    val isLoading = uiState is AuthViewModel.AuthUiState.Chargement
+    val errorMessage = (uiState as? AuthViewModel.AuthUiState.Erreur)?.message
 
     Column(
         modifier = Modifier
@@ -31,7 +48,6 @@ fun LoginScreen() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Titre principal
         Text(
             text = "FitTrack",
             color = MintFit,
@@ -47,61 +63,109 @@ fun LoginScreen() {
 
         Spacer(modifier = Modifier.height(48.dp))
 
-        // Champ Email
         OutlinedTextField(
             value = email,
-            onValueChange = { email = it },
+            onValueChange = {
+                email = it
+                viewModel.reinitialiserEtat()
+            },
             label = { Text("Email", color = Color.Gray) },
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(
                 unfocusedBorderColor = Color.Gray,
                 focusedBorderColor = VioletFit,
                 focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White
+                unfocusedTextColor = Color.White,
+                errorBorderColor = Color.Red
             ),
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(12.dp),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Email,
+                imeAction = ImeAction.Next
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+            ),
+            singleLine = true,
+            isError = errorMessage != null
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Champ Mot de passe
         OutlinedTextField(
             value = password,
-            onValueChange = { password = it },
+            onValueChange = {
+                password = it
+                viewModel.reinitialiserEtat()
+            },
             label = { Text("Mot de passe", color = Color.Gray) },
             modifier = Modifier.fillMaxWidth(),
+            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(
+                        imageVector = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                        contentDescription = if (passwordVisible) "Masquer" else "Afficher",
+                        tint = Color.Gray
+                    )
+                }
+            },
             colors = OutlinedTextFieldDefaults.colors(
                 unfocusedBorderColor = Color.Gray,
                 focusedBorderColor = VioletFit,
                 focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White
+                unfocusedTextColor = Color.White,
+                errorBorderColor = Color.Red
             ),
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(12.dp),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Done
+            ),
+            keyboardActions = KeyboardActions(
+                onDone = {
+                    focusManager.clearFocus()
+                    viewModel.connexion(email, password)
+                }
+            ),
+            singleLine = true,
+            isError = errorMessage != null
         )
+
+        if (errorMessage != null) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = errorMessage,
+                color = Color.Red,
+                fontSize = 13.sp,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Bouton de connexion
         Button(
-            onClick = { /* Ici on appellera le ViewModel de P2 plus tard */ },
+            onClick = {
+                focusManager.clearFocus()
+                viewModel.connexion(email, password)
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
             colors = ButtonDefaults.buttonColors(containerColor = VioletFit),
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(12.dp),
+            enabled = !isLoading
         ) {
-            Text(
-                text = "Se connecter",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
+            if (isLoading) {
+                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+            } else {
+                Text(text = "Se connecter", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Option inscription
-        TextButton(onClick = { /* Navigation vers inscription */ }) {
+        TextButton(onClick = { /* TODO(InscriptionScreen) */ }) {
             Text("Pas encore de compte ? S'inscrire", color = MintFit)
         }
     }
