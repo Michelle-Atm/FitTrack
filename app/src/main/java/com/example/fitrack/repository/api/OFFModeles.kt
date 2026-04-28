@@ -27,9 +27,9 @@ data class OFFProduct(
 }
 
 data class OFFNutriments(
-    @SerializedName("energy-kcal_100g") val calories: Double? = null,
-    @SerializedName("proteins_100g") val proteines: Double? = null,
-    @SerializedName("carbohydrates_100g") val glucides: Double? = null,
-    @SerializedName("fat_100g") val lipides: Double? = null,
-    @SerializedName("fiber_100g") val fibres: Double? = null
+    @SerializedName("energy-kcal_100g") val calories: Double? = 0.0,
+    @SerializedName("proteins_100g") val proteines: Double? = 0.0,
+    @SerializedName("carbohydrates_100g") val glucides: Double? = 0.0,
+    @SerializedName("fat_100g") val lipides: Double? = 0.0,
+    @SerializedName("fiber_100g") val fibres: Double? = 0.0
 )
