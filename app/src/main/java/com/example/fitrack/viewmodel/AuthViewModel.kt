@@ -6,9 +6,12 @@ import androidx.lifecycle.viewModelScope
 import com.example.fitrack.model.User
 import com.example.fitrack.repository.AuthRepository
 import com.example.fitrack.repository.firestore.FirestoreAuthRepository
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -25,8 +28,16 @@ class AuthViewModel(
         object Deconnecte : AuthUiState()
     }
 
+    sealed class AuthEvenement {
+        object ProfilMisAJour : AuthEvenement()
+        data class Erreur(val message: String) : AuthEvenement()
+    }
+
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Initial)
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
+
+    private val _evenements = MutableSharedFlow<AuthEvenement>()
+    val evenements: SharedFlow<AuthEvenement> = _evenements.asSharedFlow()
 
     val utilisateurActuel: StateFlow<User?> = authRepository
         .observerUtilisateur()
@@ -72,8 +83,15 @@ class AuthViewModel(
                 programmePersonnalise = genererProgramme(user.copy(imc = imc))
             )
             authRepository.mettreAJourProfil(userMisAJour)
-                .onSuccess { _uiState.value = AuthUiState.Succes(userMisAJour) }
-                .onFailure { _uiState.value = AuthUiState.Erreur(it.message ?: "Erreur de mise à jour") }
+                .onSuccess {
+                    _uiState.value = AuthUiState.Initial
+                    _evenements.emit(AuthEvenement.ProfilMisAJour)
+                }
+                .onFailure {
+                    val msg = it.message ?: "Erreur de mise à jour"
+                    _uiState.value = AuthUiState.Erreur(msg)
+                    _evenements.emit(AuthEvenement.Erreur(msg))
+                }
         }
     }
 
