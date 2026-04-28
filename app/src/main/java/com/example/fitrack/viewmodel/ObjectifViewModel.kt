@@ -10,6 +10,7 @@ import com.example.fitrack.model.SideQuestUtilisateur
 import com.example.fitrack.model.User
 import com.example.fitrack.repository.ObjectifRepository
 import com.example.fitrack.repository.firestore.FirestoreObjectifRepository
+import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -61,8 +62,15 @@ class ObjectifViewModel(
                 .onSuccess { objectif ->
                     _objectifUiState.value = ObjectifUiState.Succes(calculerProgression(objectif))
                 }
-                .onFailure {
-                    _objectifUiState.value = ObjectifUiState.Erreur(it.message ?: "Erreur de chargement")
+                .onFailure { e ->
+                    val msg = e.message ?: ""
+                    if (msg.contains("offline", ignoreCase = true) ||
+                        msg.contains("UNAVAILABLE", ignoreCase = true)) {
+                        Log.w("ObjectifVM", "Firestore offline, objectif par défaut", e)
+                        _objectifUiState.value = ObjectifUiState.Succes(calculerProgression(Objectif()))
+                    } else {
+                        _objectifUiState.value = ObjectifUiState.Erreur(msg.ifBlank { "Erreur de chargement" })
+                    }
                 }
         }
     }

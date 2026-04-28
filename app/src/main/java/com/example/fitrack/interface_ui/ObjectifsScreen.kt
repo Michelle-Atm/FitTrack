@@ -13,7 +13,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DirectionsWalk
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material3.Button
@@ -150,7 +151,7 @@ fun ObjectifsScreen(
                         barColor = MintFit
                     )
                     ObjectifRow(
-                        icon = Icons.Filled.DirectionsWalk,
+                        icon = Icons.AutoMirrored.Filled.DirectionsWalk,
                         iconColor = MintFit,
                         label = "Pas",
                         value = obj.pasActuels,
@@ -168,13 +169,47 @@ fun ObjectifsScreen(
                         barColor = MintFit
                     )
                 }
+                if (state.progression.objectif.seancesEffectuees == 0) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 12.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.FitnessCenter,
+                            contentDescription = null,
+                            tint = TextDim,
+                            modifier = Modifier.size(28.dp)
+                        )
+                        Text(
+                            text = "Aucune séance enregistrée",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextDim
+                        )
+                        Text(
+                            text = "Appuie sur \"Logger une séance\" pour commencer",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextDim.copy(alpha = 0.6f)
+                        )
+                    }
+                }
             }
             is ObjectifViewModel.ObjectifUiState.Erreur -> {
-                Text(
-                    text = state.message,
-                    color = Color.Red,
-                    modifier = Modifier.padding(20.dp)
-                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Données temporairement indisponibles",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextDim
+                    )
+                }
             }
             else -> {}
         }
