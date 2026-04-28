@@ -18,9 +18,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -56,6 +58,7 @@ import com.example.fitrack.model.Repas
 import com.example.fitrack.ui.theme.AmberFit
 import com.example.fitrack.ui.theme.CardBG
 import com.example.fitrack.ui.theme.CardBG2
+import com.example.fitrack.ui.theme.DangerFit
 import com.example.fitrack.ui.theme.DarkBG
 import com.example.fitrack.ui.theme.MintFit
 import com.example.fitrack.ui.theme.TextDim
@@ -69,7 +72,8 @@ import kotlin.math.roundToInt
 fun SaisieRepasScreen(
     viewModel: NutritionViewModel,
     userId: String,
-    onRetour: () -> Unit
+    onRetour: () -> Unit,
+    allergiesUtilisateur: List<String> = emptyList()
 ) {
     val rechercheState by viewModel.rechercheState.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -96,7 +100,7 @@ fun SaisieRepasScreen(
         ) {
             IconButton(onClick = onRetour) {
                 Icon(
-                    imageVector = Icons.Filled.ArrowBack,
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Retour",
                     tint = Color.White
                 )
@@ -211,7 +215,14 @@ fun SaisieRepasScreen(
                 }
                 items(resultats, key = { it.code }) { aliment ->
                     val selected = aliment.code == selectedAliment?.code
-                    Box(
+                    val allergenesTrouves = aliment.allergenes
+                        .filter { tag ->
+                            allergiesUtilisateur.any { allergie ->
+                                tag.contains(allergie.lowercase())
+                            }
+                        }
+                        .map { it.removePrefix("en:") }
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(12.dp))
@@ -262,7 +273,43 @@ fun SaisieRepasScreen(
                                 }
                             }
                         }
+                        if (allergenesTrouves.isNotEmpty()) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp))
+                                    .background(DangerFit.copy(alpha = 0.12f))
+                                    .padding(horizontal = 12.dp, vertical = 5.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Warning,
+                                    contentDescription = null,
+                                    tint = DangerFit,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Text(
+                                    text = "Contient : ${allergenesTrouves.joinToString(", ")}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = DangerFit
+                                )
+                            }
+                        }
                     }
+                }
+            }
+
+            // Empty
+            (rechercheState as? NutritionViewModel.RechercheState.Vide)?.let { vide ->
+                item {
+                    Text(
+                        text = vide.message,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextDim,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+                    )
                 }
             }
 
@@ -271,7 +318,7 @@ fun SaisieRepasScreen(
                 item {
                     Text(
                         text = err.message,
-                        color = Color.Red,
+                        color = DangerFit,
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
