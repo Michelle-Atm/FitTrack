@@ -10,6 +10,8 @@ import com.example.fitrack.repository.NutritionRepository
 import com.example.fitrack.repository.ObjectifRepository
 import com.example.fitrack.repository.firestore.FirestoreNutritionRepository
 import com.example.fitrack.repository.firestore.FirestoreObjectifRepository
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -55,6 +57,7 @@ class NutritionViewModel(
         object Idle : RechercheState()
         object Chargement : RechercheState()
         data class Resultats(val aliments: List<AlimentOFF>) : RechercheState()
+        data class Vide(val message: String) : RechercheState()
         data class Erreur(val message: String) : RechercheState()
     }
 
@@ -63,6 +66,8 @@ class NutritionViewModel(
 
     private val _rechercheState = MutableStateFlow<RechercheState>(RechercheState.Idle)
     val rechercheState: StateFlow<RechercheState> = _rechercheState.asStateFlow()
+
+    private var rechercheJob: Job? = null
 
     private val _historiqueRepas = MutableStateFlow<List<Repas>>(emptyList())
     val historiqueRepas: StateFlow<List<Repas>> = _historiqueRepas.asStateFlow()
@@ -113,17 +118,50 @@ class NutritionViewModel(
     }
 
     fun rechercherAliment(query: String) {
-        if (query.isBlank()) {
+        if (query.length < 2) {
             _rechercheState.value = RechercheState.Idle
             return
         }
-        viewModelScope.launch {
+        rechercheJob?.cancel()
+        rechercheJob = viewModelScope.launch {
+            delay(500L)
             _rechercheState.value = RechercheState.Chargement
+            val termeLower = normaliser(query)
             nutritionRepository.rechercherAliment(query.trim())
-                .onSuccess { _rechercheState.value = RechercheState.Resultats(it) }
-                .onFailure { _rechercheState.value = RechercheState.Erreur(it.message ?: "Erreur de recherche") }
+                .onSuccess { aliments ->
+                    val filtres = aliments.filter { aliment ->
+                        aliment.nom.isNotBlank()
+                            && (aliment.calories > 0 || aliment.proteines > 0 || aliment.glucides > 0)
+                            && normaliser(aliment.nom).contains(termeLower)
+                    }
+                    if (filtres.isEmpty()) {
+                        _rechercheState.value = RechercheState.Vide(
+                            "Aucun aliment trouvé pour \"$query\""
+                        )
+                    } else {
+                        _rechercheState.value = RechercheState.Resultats(filtres)
+                    }
+                }
+                .onFailure { e ->
+                    val msg = e.message ?: ""
+                    _rechercheState.value = when {
+                        msg.contains("503") ->
+                            RechercheState.Erreur("Service indisponible, réessaie dans quelques secondes")
+                        msg.contains("offline", ignoreCase = true) ||
+                        msg.contains("Unable to resolve host", ignoreCase = true) ->
+                            RechercheState.Erreur("Connexion impossible, vérifie ton réseau")
+                        else -> RechercheState.Erreur(msg.ifBlank { "Erreur de recherche" })
+                    }
+                }
         }
     }
+
+    private fun normaliser(s: String): String = s.lowercase()
+        .replace("[àáâã]".toRegex(), "a")
+        .replace("[éèêë]".toRegex(), "e")
+        .replace("[îï]".toRegex(), "i")
+        .replace("[ôõ]".toRegex(), "o")
+        .replace("[ùûü]".toRegex(), "u")
 
     fun rechercherParCodeBarres(code: String) {
         viewModelScope.launch {

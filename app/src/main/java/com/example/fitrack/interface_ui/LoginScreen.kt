@@ -28,7 +28,7 @@ import com.example.fitrack.ui.theme.VioletFit
 import com.example.fitrack.viewmodel.AuthViewModel
 
 @Composable
-fun LoginScreen(viewModel: AuthViewModel) {
+fun LoginScreen(viewModel: AuthViewModel, onNavigerVersInscription: () -> Unit = {}) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
@@ -164,7 +164,7 @@ fun LoginScreen(viewModel: AuthViewModel) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        TextButton(onClick = { /* TODO(InscriptionScreen) */ }) {
+        TextButton(onClick = onNavigerVersInscription) {
             Text("Pas encore de compte ? S'inscrire", color = MintFit)
         }
     }

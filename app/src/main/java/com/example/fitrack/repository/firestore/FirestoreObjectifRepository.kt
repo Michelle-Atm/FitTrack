@@ -6,6 +6,7 @@ import com.example.fitrack.model.SideQuest
 import com.example.fitrack.model.SideQuestUtilisateur
 import com.example.fitrack.repository.ObjectifRepository
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
 
@@ -65,6 +66,12 @@ class FirestoreObjectifRepository(
                 .orderBy("date", Query.Direction.DESCENDING)
                 .get().await()
             Result.success(snapshot.toObjects(Seance::class.java))
+        } catch (e: FirebaseFirestoreException) {
+            when (e.code) {
+                FirebaseFirestoreException.Code.UNAVAILABLE,
+                FirebaseFirestoreException.Code.NOT_FOUND -> Result.success(emptyList())
+                else -> Result.failure(e)
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }

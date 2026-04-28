@@ -63,6 +63,10 @@ dependencies {
     implementation(libs.retrofit.gson)
     implementation(libs.okhttp.logging)
 
+    // Navigation
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.play.services)

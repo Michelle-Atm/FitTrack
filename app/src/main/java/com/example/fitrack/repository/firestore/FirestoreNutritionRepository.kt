@@ -98,11 +98,12 @@ class FirestoreNutritionRepository(
     private fun OFFProduct.toDomaine() = AlimentOFF(
         code = code,
         nom = nom,
-        calories = nutriments.calories,
-        proteines = nutriments.proteines,
-        glucides = nutriments.glucides,
-        lipides = nutriments.lipides,
-        fibres = nutriments.fibres,
-        imageUrl = imageUrlEffective
+        calories = nutriments?.calories ?: 0.0,
+        proteines = nutriments?.proteines ?: 0.0,
+        glucides = nutriments?.glucides ?: 0.0,
+        lipides = nutriments?.lipides ?: 0.0,
+        fibres = nutriments?.fibres ?: 0.0,
+        imageUrl = imageUrlEffective,
+        allergenes = allergenes.orEmpty()
     )
 }

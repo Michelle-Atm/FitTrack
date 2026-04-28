@@ -61,8 +61,14 @@ class ObjectifViewModel(
                 .onSuccess { objectif ->
                     _objectifUiState.value = ObjectifUiState.Succes(calculerProgression(objectif))
                 }
-                .onFailure {
-                    _objectifUiState.value = ObjectifUiState.Erreur(it.message ?: "Erreur de chargement")
+                .onFailure { e ->
+                    val msg = e.message ?: ""
+                    if (msg.contains("offline", ignoreCase = true) ||
+                        msg.contains("UNAVAILABLE", ignoreCase = true)) {
+                        _objectifUiState.value = ObjectifUiState.Succes(calculerProgression(Objectif()))
+                    } else {
+                        _objectifUiState.value = ObjectifUiState.Erreur(msg.ifBlank { "Erreur de chargement" })
+                    }
                 }
         }
     }
