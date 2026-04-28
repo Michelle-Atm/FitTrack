@@ -36,7 +36,6 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -127,12 +126,6 @@ fun InscriptionScreen(
         2 -> objectif != null && level != null
         3 -> poids.toDoubleOrNull() != null && taille.toIntOrNull() != null
         else -> false
-    }
-
-    LaunchedEffect(uiState) {
-        if (uiState is AuthViewModel.AuthUiState.Erreur) {
-            // keep current step, error shown below button
-        }
     }
 
     Column(
