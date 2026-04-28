@@ -22,6 +22,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.fitrack.ui.theme.DarkBG
 import com.example.fitrack.ui.theme.MintFit
 import com.example.fitrack.ui.theme.VioletFit
@@ -34,7 +35,7 @@ fun LoginScreen(viewModel: AuthViewModel, onNavigerVersInscription: () -> Unit =
     var passwordVisible by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
 
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val isLoading = uiState is AuthViewModel.AuthUiState.Chargement
     val errorMessage = (uiState as? AuthViewModel.AuthUiState.Erreur)?.message
