@@ -3,6 +3,7 @@ package com.example.fitrack
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.core.view.WindowCompat
 import androidx.activity.viewModels
 import com.example.fitrack.navigation.FitTrackNavGraph
 import com.example.fitrack.ui.theme.FitrackTheme
@@ -18,6 +19,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             FitrackTheme {
                 FitTrackNavGraph(

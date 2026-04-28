@@ -2,6 +2,8 @@ package com.example.fitrack.interface_ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -76,6 +78,7 @@ fun NutritionScreen(
 
     Scaffold(
         containerColor = DarkBG,
+        contentWindowInsets = WindowInsets.safeDrawing,
         floatingActionButton = {
             if (!readOnly) {
                 FloatingActionButton(

@@ -126,7 +126,8 @@ fun FitTrackNavGraph(
                 SaisieRepasScreen(
                     viewModel = nutritionViewModel,
                     userId = userId,
-                    onRetour = { navController.popBackStack() }
+                    onRetour = { navController.popBackStack() },
+                    allergiesUtilisateur = user?.allergies ?: emptyList()
                 )
             }
             composable(ROUTE_OBJECTIFS) {
