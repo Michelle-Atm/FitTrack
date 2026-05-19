@@ -14,18 +14,27 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.fitrack.components.BottomNavBar
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.fitrack.interface_ui.AvatarScreen
+import com.example.fitrack.interface_ui.GpsTrajetScreen
 import com.example.fitrack.interface_ui.HistoriqueNutritionScreen
 import com.example.fitrack.interface_ui.HomeScreen
 import com.example.fitrack.interface_ui.InscriptionScreen
+import com.example.fitrack.interface_ui.LeaderboardScreen
 import com.example.fitrack.interface_ui.LoginScreen
 import com.example.fitrack.interface_ui.NutritionScreen
 import com.example.fitrack.interface_ui.ObjectifsScreen
+import com.example.fitrack.interface_ui.PodometreScreen
 import com.example.fitrack.interface_ui.ProfilScreen
 import com.example.fitrack.interface_ui.SaisieRepasScreen
 import com.example.fitrack.ui.theme.DarkBG
 import com.example.fitrack.viewmodel.AuthViewModel
+import com.example.fitrack.viewmodel.AvatarViewModel
+import com.example.fitrack.viewmodel.GpsViewModel
 import com.example.fitrack.viewmodel.NutritionViewModel
 import com.example.fitrack.viewmodel.ObjectifViewModel
+import com.example.fitrack.viewmodel.SensorViewModel
+import com.example.fitrack.viewmodel.SocialViewModel
 
 const val ROUTE_LOGIN        = "login"
 const val ROUTE_INSCRIPTION  = "inscription"
@@ -40,7 +49,9 @@ const val ROUTE_GPS          = "gps_trajet"
 const val ROUTE_AVATAR       = "avatar"
 const val ROUTE_LEADERBOARD  = "leaderboard"
 
-private val ROUTES_WITH_NAV = setOf(ROUTE_HOME, ROUTE_NUTRITION, ROUTE_OBJECTIFS, ROUTE_PROFIL)
+private val ROUTES_WITH_NAV = setOf(
+    ROUTE_HOME, ROUTE_NUTRITION, ROUTE_OBJECTIFS, ROUTE_PROFIL, ROUTE_AVATAR, ROUTE_LEADERBOARD
+)
 
 @Composable
 fun FitTrackNavGraph(
@@ -149,6 +160,21 @@ fun FitTrackNavGraph(
                         navController.navigate("$ROUTE_NUTRITION?date=$date")
                     }
                 )
+            }
+            composable(ROUTE_PODOMETRE) {
+                PodometreScreen(
+                    sensorViewModel = viewModel(),
+                    objectifViewModel = objectifViewModel
+                )
+            }
+            composable(ROUTE_GPS) {
+                GpsTrajetScreen(gpsViewModel = viewModel())
+            }
+            composable(ROUTE_AVATAR) {
+                AvatarScreen(avatarViewModel = viewModel())
+            }
+            composable(ROUTE_LEADERBOARD) {
+                LeaderboardScreen(socialViewModel = viewModel())
             }
         }
     }
