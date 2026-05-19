@@ -27,14 +27,18 @@ import com.example.fitrack.viewmodel.AuthViewModel
 import com.example.fitrack.viewmodel.NutritionViewModel
 import com.example.fitrack.viewmodel.ObjectifViewModel
 
-const val ROUTE_LOGIN       = "login"
-const val ROUTE_INSCRIPTION = "inscription"
-const val ROUTE_HOME        = "home"
-const val ROUTE_PROFIL      = "profil"
-const val ROUTE_NUTRITION   = "nutrition"
+const val ROUTE_LOGIN        = "login"
+const val ROUTE_INSCRIPTION  = "inscription"
+const val ROUTE_HOME         = "home"
+const val ROUTE_PROFIL       = "profil"
+const val ROUTE_NUTRITION    = "nutrition"
 const val ROUTE_SAISIE_REPAS = "saisie_repas"
-const val ROUTE_OBJECTIFS   = "objectifs"
-const val ROUTE_HISTORIQUE  = "historique_nutrition"
+const val ROUTE_OBJECTIFS    = "objectifs"
+const val ROUTE_HISTORIQUE   = "historique_nutrition"
+const val ROUTE_PODOMETRE    = "podometre"
+const val ROUTE_GPS          = "gps_trajet"
+const val ROUTE_AVATAR       = "avatar"
+const val ROUTE_LEADERBOARD  = "leaderboard"
 
 private val ROUTES_WITH_NAV = setOf(ROUTE_HOME, ROUTE_NUTRITION, ROUTE_OBJECTIFS, ROUTE_PROFIL)
 
