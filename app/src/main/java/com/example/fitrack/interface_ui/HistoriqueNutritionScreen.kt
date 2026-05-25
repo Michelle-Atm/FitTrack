@@ -1,22 +1,15 @@
 package com.example.fitrack.interface_ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -25,12 +18,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.fitrack.components.HistoriqueRow
-import com.example.fitrack.ui.theme.DarkBG
-import com.example.fitrack.ui.theme.MintFit
-import com.example.fitrack.ui.theme.TextDim
+import com.example.fitrack.ui.theme.*
 import com.example.fitrack.viewmodel.NutritionViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -50,7 +42,6 @@ fun HistoriqueNutritionScreen(
         if (userId.isNotBlank()) viewModel.chargerHistorique(userId, 7)
     }
 
-    // Group repas by day and compute daily totals
     val dayFormat = SimpleDateFormat("EEEE dd MMMM", Locale.FRENCH)
     val groupedDays = historique
         .groupBy { viewModel.debutJournee(it.date) }
@@ -64,78 +55,79 @@ fun HistoriqueNutritionScreen(
 
     val avgKcal = if (groupedDays.isNotEmpty())
         groupedDays.sumOf { it.third } / groupedDays.size else 0.0
-    val objectifRef = 2000.0
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(DarkBG)
-    ) {
-        // Header
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(
-                onClick = onRetour,
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(Color.White.copy(alpha = 0.06f))
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Retour",
-                    tint = Color.White
-                )
-            }
-            Text(
-                text = "Historique",
-                style = MaterialTheme.typography.titleLarge,
-                color = Color.White,
-                modifier = Modifier.padding(start = 8.dp)
-            )
-        }
-
-        Text(
-            text = "7 derniers jours · moyenne ",
-            style = MaterialTheme.typography.bodySmall,
-            color = TextDim,
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp)
-        )
-        Text(
-            text = "${avgKcal.roundToInt()} kcal",
-            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-            color = Color.White,
-            modifier = Modifier.padding(horizontal = 20.dp)
-        )
-
-        LazyColumn(
+    Scaffold(
+        containerColor = DarkBG,
+        contentWindowInsets = WindowInsets.safeDrawing
+    ) { innerPadding ->
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 20.dp)
-                .padding(top = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+                .background(DarkBG)
+                .padding(innerPadding)
         ) {
-            if (groupedDays.isEmpty()) {
-                item {
-                    Text(
-                        text = "Aucun historique disponible",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = TextDim,
-                        modifier = Modifier.padding(vertical = 24.dp)
-                    )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onRetour) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = Color.White)
                 }
-            } else {
-                items(groupedDays, key = { it.first }) { (dayStart, label, totalCal) ->
-                    HistoriqueRow(
-                        date = label,
-                        kcal = totalCal,
-                        goal = objectifRef,
-                        onClick = { onOuvrirJour(dayStart) }
-                    )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    "Historique",
+                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.ExtraBold),
+                    color = Color.White
+                )
+            }
+
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = CardBG),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.04f))
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text("MOYENNE SUR 7 JOURS", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.sp), color = TextDim)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text("${avgKcal.roundToInt()} KCAL", style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Black), color = MintFit)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            LazyColumn(
+                modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                if (groupedDays.isEmpty()) {
+                    item {
+                        Text("Aucun historique disponible", color = TextDim, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(32.dp))
+                    }
+                } else {
+                    items(groupedDays, key = { it.first }) { (dayStart, label, totalCal) ->
+                        Card(
+                            onClick = { onOuvrirJour(dayStart) },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = CardBG),
+                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.04f))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(20.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column {
+                                    Text(label, fontWeight = FontWeight.Bold, color = Color.White)
+                                    Text("${totalCal.roundToInt()} kcal", style = MaterialTheme.typography.labelSmall, color = TextFaint)
+                                }
+                                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = TextDim)
+                            }
+                        }
+                    }
                 }
             }
         }

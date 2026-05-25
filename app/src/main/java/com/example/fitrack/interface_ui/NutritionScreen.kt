@@ -1,6 +1,8 @@
 package com.example.fitrack.interface_ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.safeDrawing
@@ -13,11 +15,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -33,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -41,6 +48,7 @@ import com.example.fitrack.components.ProgressRing
 import com.example.fitrack.components.RepasItem
 import com.example.fitrack.model.HeureRepas
 import com.example.fitrack.ui.theme.AmberFit
+import com.example.fitrack.ui.theme.CardBG
 import com.example.fitrack.ui.theme.DarkBG
 import com.example.fitrack.ui.theme.MintFit
 import com.example.fitrack.ui.theme.TextDim
@@ -85,12 +93,13 @@ fun NutritionScreen(
                     onClick = onAjouterRepas,
                     containerColor = MintFit,
                     contentColor = Color(0xFF002817),
-                    shape = RoundedCornerShape(999.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.size(56.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.CalendarToday,
+                        imageVector = Icons.Filled.Add,
                         contentDescription = "Ajouter un repas",
-                        modifier = Modifier.size(26.dp)
+                        modifier = Modifier.size(28.dp)
                     )
                 }
             }
@@ -100,27 +109,35 @@ fun NutritionScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .background(DarkBG)
-                .padding(padding),
+                .padding(padding)
+                .padding(horizontal = 24.dp),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 32.dp)
         ) {
-            // Header
             item {
+                Spacer(modifier = Modifier.height(16.dp))
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 12.dp),
+                        .padding(vertical = 12.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Top
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column {
                         Text(
                             text = dateLabel.uppercase(),
-                            style = MaterialTheme.typography.labelSmall,
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.sp
+                            ),
                             color = TextDim
                         )
+                        Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = if (readOnly) dateLabel else "Aujourd'hui",
-                            style = MaterialTheme.typography.headlineMedium,
+                            style = MaterialTheme.typography.headlineLarge.copy(
+                                fontWeight = FontWeight.ExtraBold,
+                                letterSpacing = (-1).sp
+                            ),
                             color = Color.White
                         )
                     }
@@ -128,15 +145,16 @@ fun NutritionScreen(
                         IconButton(
                             onClick = onHistorique,
                             modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color.White.copy(alpha = 0.06f))
+                                .size(44.dp)
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(CardBG)
+                                .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.05f)), RoundedCornerShape(14.dp))
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.CalendarToday,
                                 contentDescription = "Historique",
                                 tint = Color.White,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(20.dp)
                             )
                         }
                     }
@@ -146,7 +164,9 @@ fun NutritionScreen(
             when (val state = uiState) {
                 is NutritionViewModel.NutritionUiState.Chargement -> item {
                     Box(
-                        modifier = Modifier.fillMaxWidth().padding(32.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
                         contentAlignment = Alignment.Center
                     ) { CircularProgressIndicator(color = MintFit) }
                 }
@@ -164,87 +184,108 @@ fun NutritionScreen(
                         totaux.calories / comp.pourcentageCalories else 2000.0
                     val pct = (comp.pourcentageCalories * 100).roundToInt()
 
-                    // Progress ring
                     item {
-                        Box(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
-                            contentAlignment = Alignment.Center
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 16.dp),
+                            shape = RoundedCornerShape(24.dp),
+                            colors = CardDefaults.cardColors(containerColor = CardBG),
+                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.04f))
                         ) {
-                            ProgressRing(
-                                value = totaux.calories,
-                                goal = objectifCal,
-                                size = 210.dp,
-                                strokeWidth = 14.dp,
-                                color = MintFit
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 28.dp),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    text = "Calories",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = TextDim
-                                )
-                                Text(
-                                    text = "${totaux.calories.roundToInt()}",
-                                    style = MaterialTheme.typography.bodyLarge.copy(
-                                        fontSize = 34.sp,
-                                        fontWeight = FontWeight.ExtraBold,
-                                        letterSpacing = (-1).sp
-                                    ),
-                                    color = Color.White
-                                )
-                                Text(
-                                    text = "/ ${objectifCal.roundToInt()} kcal",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = TextDim
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = "$pct% ATTEINT",
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.ExtraBold),
+                                ProgressRing(
+                                    value = totaux.calories,
+                                    goal = objectifCal,
+                                    size = 200.dp,
+                                    strokeWidth = 12.dp,
                                     color = MintFit
-                                )
+                                ) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text(
+                                            text = "CALORIES",
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                letterSpacing = 1.sp
+                                            ),
+                                            color = TextDim
+                                        )
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = "${totaux.calories.roundToInt()}",
+                                            style = MaterialTheme.typography.headlineLarge.copy(
+                                                fontSize = 38.sp,
+                                                fontWeight = FontWeight.Black,
+                                                letterSpacing = (-1).sp
+                                            ),
+                                            color = Color.White
+                                        )
+                                        Text(
+                                            text = "/ ${objectifCal.roundToInt()} kcal",
+                                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                                            color = TextDim
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            text = "$pct% ATTEINT",
+                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.ExtraBold),
+                                            color = MintFit
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
 
-                    // Macros
                     item {
-                        Column(
-                            modifier = Modifier.padding(horizontal = 20.dp),
-                            verticalArrangement = Arrangement.spacedBy(14.dp)
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(24.dp),
+                            colors = CardDefaults.cardColors(containerColor = CardBG),
+                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.04f))
                         ) {
-                            val protGoal = if (comp.pourcentageProteines > 0)
-                                totaux.proteines / comp.pourcentageProteines else 150.0
-                            val glucGoal = if (comp.pourcentageGlucides > 0)
-                                totaux.glucides / comp.pourcentageGlucides else 250.0
-                            val lipGoal = if (comp.pourcentageLipides > 0)
-                                totaux.lipides / comp.pourcentageLipides else 65.0
+                            Column(
+                                modifier = Modifier.padding(20.dp),
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                val protGoal = if (comp.pourcentageProteines > 0)
+                                    totaux.proteines / comp.pourcentageProteines else 150.0
+                                val glucGoal = if (comp.pourcentageGlucides > 0)
+                                    totaux.glucides / comp.pourcentageGlucides else 250.0
+                                val lipGoal = if (comp.pourcentageLipides > 0)
+                                    totaux.lipides / comp.pourcentageLipides else 65.0
 
-                            MacroBar(label = "Protéines", value = totaux.proteines, goal = protGoal, color = MintFit)
-                            MacroBar(label = "Glucides", value = totaux.glucides, goal = glucGoal, color = VioletFit)
-                            MacroBar(label = "Lipides", value = totaux.lipides, goal = lipGoal, color = AmberFit)
-                            MacroBar(label = "Fibres", value = totaux.fibres, goal = 30.0, color = Color(0xFF8C8CA8))
+                                MacroBar(label = "Protéines", value = totaux.proteines, goal = protGoal, color = MintFit)
+                                MacroBar(label = "Glucides", value = totaux.glucides, goal = glucGoal, color = VioletFit)
+                                MacroBar(label = "Lipides", value = totaux.lipides, goal = lipGoal, color = AmberFit)
+                                MacroBar(label = "Fibres", value = totaux.fibres, goal = 30.0, color = Color(0xFF8C8CA8))
+                            }
                         }
                     }
 
-                    // Meals header
                     item {
+                        Spacer(modifier = Modifier.height(28.dp))
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 20.dp)
-                                .padding(top = 24.dp, bottom = 12.dp),
+                                .padding(bottom = 12.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
                                 text = "Repas du jour",
-                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.ExtraBold),
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
                                 color = Color.White
                             )
                             if (state.repas.isNotEmpty()) {
                                 Text(
                                     text = "${state.repas.size} items · swipe ←",
-                                    style = MaterialTheme.typography.labelSmall,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
                                     color = TextFaint
                                 )
                             }
@@ -253,15 +294,24 @@ fun NutritionScreen(
 
                     if (state.repas.isEmpty()) {
                         item {
-                            Text(
-                                text = "Aucun repas enregistré",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = TextFaint,
+                            Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(24.dp),
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                            )
+                                    .padding(vertical = 8.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(containerColor = CardBG),
+                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.04f))
+                            ) {
+                                Text(
+                                    text = "Aucun repas enregistré",
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                                    color = TextFaint,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(32.dp),
+                                    textAlign = TextAlign.Center
+                                )
+                            }
                         }
                     } else {
                         items(state.repas, key = { it.id }) { repas ->
@@ -275,7 +325,7 @@ fun NutritionScreen(
                                 kcal = repas.calories.roundToInt(),
                                 macros = "P ${repas.proteines.roundToInt()} · G ${repas.glucides.roundToInt()} · L ${repas.lipides.roundToInt()}",
                                 onDelete = { viewModel.supprimerRepas(repas.id, userId) },
-                                modifier = Modifier.padding(horizontal = 20.dp, vertical = 5.dp)
+                                modifier = Modifier.padding(vertical = 6.dp)
                             )
                         }
                     }
