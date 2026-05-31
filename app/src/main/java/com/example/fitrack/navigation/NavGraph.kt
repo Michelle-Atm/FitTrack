@@ -170,11 +170,12 @@ fun FitTrackNavGraph(
             composable(ROUTE_GPS) {
                 GpsTrajetScreen(gpsViewModel = viewModel())
             }
+
             composable(ROUTE_AVATAR) {
-                AvatarScreen(avatarViewModel = viewModel())
-            }
-            composable(ROUTE_LEADERBOARD) {
-                LeaderboardScreen(socialViewModel = viewModel())
+                AvatarScreen(
+                    avatarViewModel = viewModel(factory = AvatarViewModel.Factory),
+                    userId = userId
+                )
             }
         }
     }

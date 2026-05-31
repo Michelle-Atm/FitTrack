@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -28,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,12 +48,21 @@ import com.example.fitrack.ui.theme.VioletFit
 import com.example.fitrack.viewmodel.AvatarViewModel
 
 @Composable
-fun AvatarScreen(avatarViewModel: AvatarViewModel) {
+fun AvatarScreen(
+    avatarViewModel: AvatarViewModel,
+    userId: String
+) {
     val avatar by avatarViewModel.avatar.collectAsStateWithLifecycle()
     val xpProgression by avatarViewModel.xpProgression.collectAsStateWithLifecycle()
     val prochainNiveau by avatarViewModel.prochainNiveau.collectAsStateWithLifecycle()
     val xpPourNiveau by avatarViewModel.xpPourNiveau.collectAsStateWithLifecycle()
     val historiqueEvolution by avatarViewModel.historiqueEvolution.collectAsStateWithLifecycle()
+
+    LaunchedEffect(userId) {
+        if (userId.isNotBlank()) {
+            avatarViewModel.chargerAvatar(userId)
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -63,7 +72,6 @@ fun AvatarScreen(avatarViewModel: AvatarViewModel) {
             .padding(bottom = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -91,7 +99,6 @@ fun AvatarScreen(avatarViewModel: AvatarViewModel) {
             }
         }
 
-        // Zone avatar centrale
         Box(
             modifier = Modifier
                 .size(180.dp)
@@ -107,7 +114,6 @@ fun AvatarScreen(avatarViewModel: AvatarViewModel) {
 
         Spacer(Modifier.height(12.dp))
 
-        // Badge état
         Surface(
             color = couleurEtat(avatar?.etatActuel).copy(alpha = 0.12f),
             shape = RoundedCornerShape(999.dp),
@@ -123,7 +129,6 @@ fun AvatarScreen(avatarViewModel: AvatarViewModel) {
 
         Spacer(Modifier.height(28.dp))
 
-        // Barre XP
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -158,7 +163,6 @@ fun AvatarScreen(avatarViewModel: AvatarViewModel) {
 
         Spacer(Modifier.height(24.dp))
 
-        // Section niveaux
         Text(
             text = "NIVEAUX",
             style = MaterialTheme.typography.labelSmall,
@@ -194,7 +198,6 @@ fun AvatarScreen(avatarViewModel: AvatarViewModel) {
 
         Spacer(Modifier.height(24.dp))
 
-        // Personnalité
         Text(
             text = "PERSONNALITÉ",
             style = MaterialTheme.typography.labelSmall,
@@ -233,7 +236,6 @@ fun AvatarScreen(avatarViewModel: AvatarViewModel) {
             }
         }
 
-        // Historique
         if (historiqueEvolution.isNotEmpty()) {
             Spacer(Modifier.height(24.dp))
             Text(
