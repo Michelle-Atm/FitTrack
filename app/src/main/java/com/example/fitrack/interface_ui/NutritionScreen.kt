@@ -42,6 +42,7 @@ import com.example.fitrack.components.RepasItem
 import com.example.fitrack.model.HeureRepas
 import com.example.fitrack.ui.theme.AmberFit
 import com.example.fitrack.ui.theme.DarkBG
+import com.example.fitrack.ui.theme.DarkText
 import com.example.fitrack.ui.theme.MintFit
 import com.example.fitrack.ui.theme.TextDim
 import com.example.fitrack.ui.theme.TextFaint
@@ -84,7 +85,7 @@ fun NutritionScreen(
                 FloatingActionButton(
                     onClick = onAjouterRepas,
                     containerColor = MintFit,
-                    contentColor = Color(0xFF002817),
+                    contentColor = DarkText,
                     shape = RoundedCornerShape(999.dp)
                 ) {
                     Icon(

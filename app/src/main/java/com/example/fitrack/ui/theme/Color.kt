@@ -3,6 +3,7 @@ package com.example.fitrack.ui.theme
 import androidx.compose.ui.graphics.Color
 
 val DarkBG    = Color(0xFF0E0E18)
+val DarkText  = Color(0xFF002817)
 val CardBG    = Color(0xFF1A1A2E)
 val CardBG2   = Color(0xFF22223C)
 val MintFit   = Color(0xFF00D68F)

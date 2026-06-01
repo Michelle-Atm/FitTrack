@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.fitrack.ui.theme.DarkText
 import com.example.fitrack.ui.theme.MintFit
 import com.example.fitrack.ui.theme.TextDim
 
@@ -54,7 +55,7 @@ fun PermissionBox(
             onClick = onClick,
             colors = ButtonDefaults.buttonColors(containerColor = MintFit)
         ) {
-            Text(bouton, color = androidx.compose.ui.graphics.Color(0xFF002817))
+            Text(bouton, color = DarkText)
         }
     }
 }

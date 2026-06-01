@@ -60,6 +60,7 @@ import com.example.fitrack.ui.theme.CardBG
 import com.example.fitrack.ui.theme.CardBG2
 import com.example.fitrack.ui.theme.DangerFit
 import com.example.fitrack.ui.theme.DarkBG
+import com.example.fitrack.ui.theme.DarkText
 import com.example.fitrack.ui.theme.MintFit
 import com.example.fitrack.ui.theme.TextDim
 import com.example.fitrack.ui.theme.TextFaint
@@ -145,7 +146,7 @@ fun SaisieRepasScreen(
                             shape = RoundedCornerShape(999.dp),
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = MintFit,
-                                selectedLabelColor = Color(0xFF002817),
+                                selectedLabelColor = DarkText,
                                 containerColor = CardBG,
                                 labelColor = TextDim
                             ),
@@ -425,9 +426,9 @@ fun SaisieRepasScreen(
                 shape = RoundedCornerShape(12.dp)
             ) {
                 if (isLoading) {
-                    CircularProgressIndicator(color = Color(0xFF002817), modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                    CircularProgressIndicator(color = DarkText, modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
                 } else {
-                    Text("Ajouter", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFF002817))
+                    Text("Ajouter", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = DarkText)
                 }
             }
         }

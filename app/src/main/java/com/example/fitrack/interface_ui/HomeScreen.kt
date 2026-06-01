@@ -42,6 +42,7 @@ import com.example.fitrack.navigation.ROUTE_PROFIL
 import com.example.fitrack.ui.theme.AmberFit
 import com.example.fitrack.ui.theme.CardBG
 import com.example.fitrack.ui.theme.DarkBG
+import com.example.fitrack.ui.theme.DarkText
 import com.example.fitrack.ui.theme.MintFit
 import com.example.fitrack.ui.theme.TextDim
 import com.example.fitrack.ui.theme.VioletFit
@@ -151,7 +152,7 @@ private fun NavShortcut(label: String, color: Color, onClick: () -> Unit) {
             text = label,
             fontSize = 15.sp,
             fontWeight = FontWeight.Bold,
-            color = if (color == CardBG) Color.White else Color(0xFF002817)
+            color = if (color == CardBG) Color.White else DarkText
         )
     }
 }

@@ -58,6 +58,7 @@ import com.example.fitrack.model.User
 import com.example.fitrack.ui.theme.AmberFit
 import com.example.fitrack.ui.theme.CardBG
 import com.example.fitrack.ui.theme.DarkBG
+import com.example.fitrack.ui.theme.DarkText
 import com.example.fitrack.ui.theme.MintFit
 import com.example.fitrack.ui.theme.TextDim
 import com.example.fitrack.ui.theme.VioletFit
@@ -243,7 +244,7 @@ fun InscriptionScreen(
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
-                        color = Color(0xFF002817),
+                        color = DarkText,
                         modifier = Modifier.size(24.dp),
                         strokeWidth = 2.dp
                     )
@@ -252,7 +253,7 @@ fun InscriptionScreen(
                         text = if (step < 3) "Continuer" else "Créer mon compte",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF002817)
+                        color = DarkText
                     )
                 }
             }
@@ -403,7 +404,7 @@ private fun Step2(
                 shape = RoundedCornerShape(999.dp),
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = MintFit,
-                    selectedLabelColor = Color(0xFF002817),
+                    selectedLabelColor = DarkText,
                     containerColor = CardBG,
                     labelColor = TextDim
                 ),

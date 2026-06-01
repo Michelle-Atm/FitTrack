@@ -39,6 +39,7 @@ import com.example.fitrack.components.StatCard
 import com.example.fitrack.ui.theme.AmberFit
 import com.example.fitrack.ui.theme.CardBG
 import com.example.fitrack.ui.theme.DarkBG
+import com.example.fitrack.ui.theme.DarkText
 import com.example.fitrack.ui.theme.MintFit
 import com.example.fitrack.ui.theme.TextDim
 import com.example.fitrack.ui.theme.VioletFit
@@ -118,7 +119,7 @@ fun PodometreScreen(
             ) {
                 Text(
                     text = if (estActif) "Stop" else "Start",
-                    color = if (estActif) Color(0xFF002817) else Color.White,
+                    color = if (estActif) DarkText else Color.White,
                     fontWeight = FontWeight.Bold
                 )
             }

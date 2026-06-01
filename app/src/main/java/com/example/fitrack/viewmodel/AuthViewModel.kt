@@ -76,7 +76,6 @@ class AuthViewModel(
 
     fun mettreAJourProfil(user: User) {
         viewModelScope.launch {
-            _uiState.value = AuthUiState.Chargement
             val imc = calculerIMC(user.poids, user.taille)
             val userMisAJour = user.copy(
                 imc = imc,

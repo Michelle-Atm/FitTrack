@@ -45,6 +45,7 @@ import com.example.fitrack.components.PermissionBox
 import com.example.fitrack.ui.theme.AmberFit
 import com.example.fitrack.ui.theme.CardBG
 import com.example.fitrack.ui.theme.DarkBG
+import com.example.fitrack.ui.theme.DarkText
 import com.example.fitrack.ui.theme.MintFit
 import com.example.fitrack.ui.theme.TextDim
 import com.example.fitrack.viewmodel.GpsViewModel
@@ -178,12 +179,12 @@ fun GpsTrajetScreen(gpsViewModel: GpsViewModel) {
                         imageVector = if (estEnregistrement) Icons.Default.Stop
                                       else Icons.Default.FiberManualRecord,
                         contentDescription = null,
-                        tint = if (estEnregistrement) Color.White else Color(0xFF002817)
+                        tint = if (estEnregistrement) Color.White else DarkText
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
                         text = if (estEnregistrement) "Stop" else "Start",
-                        color = if (estEnregistrement) Color.White else Color(0xFF002817),
+                        color = if (estEnregistrement) Color.White else DarkText,
                         fontWeight = FontWeight.Bold
                     )
                 }

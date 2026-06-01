@@ -65,6 +65,7 @@ import com.example.fitrack.ui.theme.BorderStr
 import com.example.fitrack.ui.theme.CardBG
 import com.example.fitrack.ui.theme.DangerFit
 import com.example.fitrack.ui.theme.DarkBG
+import com.example.fitrack.ui.theme.DarkText
 import com.example.fitrack.ui.theme.MintFit
 import com.example.fitrack.ui.theme.TextDim
 import com.example.fitrack.ui.theme.VioletFit
@@ -105,6 +106,7 @@ fun ProfilScreen(viewModel: AuthViewModel, navController: NavController) {
     var allergies by remember(baseUser.uid) { mutableStateOf(baseUser.allergies) }
     var disponibilites by remember(baseUser.uid) { mutableStateOf(baseUser.disponibilites) }
     var newAllergy by remember { mutableStateOf("") }
+    var isSaving by remember { mutableStateOf(false) }
 
     val imc = remember(poids, taille) {
         val p = poids.toDoubleOrNull() ?: 0.0
@@ -124,6 +126,7 @@ fun ProfilScreen(viewModel: AuthViewModel, navController: NavController) {
 
     LaunchedEffect(Unit) {
         viewModel.evenements.collect { evenement ->
+            isSaving = false
             when (evenement) {
                 is AuthViewModel.AuthEvenement.ProfilMisAJour ->
                     snackbarHostState.showSnackbar(
@@ -274,7 +277,7 @@ fun ProfilScreen(viewModel: AuthViewModel, navController: NavController) {
                             shape = RoundedCornerShape(999.dp),
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = MintFit,
-                                selectedLabelColor = Color(0xFF002817),
+                                selectedLabelColor = DarkText,
                                 containerColor = CardBG,
                                 labelColor = TextDim
                             ),
@@ -408,7 +411,7 @@ fun ProfilScreen(viewModel: AuthViewModel, navController: NavController) {
                             contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = if (sel) MintFit else CardBG,
-                                contentColor = if (sel) Color(0xFF002817) else TextDim
+                                contentColor = if (sel) DarkText else TextDim
                             ),
                             shape = RoundedCornerShape(10.dp),
                             border = androidx.compose.foundation.BorderStroke(1.dp, if (sel) MintFit else Border)
@@ -421,6 +424,7 @@ fun ProfilScreen(viewModel: AuthViewModel, navController: NavController) {
                 // Save button
                 Button(
                     onClick = {
+                        isSaving = true
                         val updated = baseUser.copy(
                             poids = poids.toDoubleOrNull() ?: baseUser.poids,
                             taille = taille.toDoubleOrNull()?.toInt()
@@ -432,15 +436,15 @@ fun ProfilScreen(viewModel: AuthViewModel, navController: NavController) {
                         )
                         viewModel.mettreAJourProfil(updated)
                     },
-                    enabled = uiState !is AuthViewModel.AuthUiState.Chargement,
+                    enabled = !isSaving,
                     modifier = Modifier.fillMaxWidth().height(52.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MintFit),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    if (uiState is AuthViewModel.AuthUiState.Chargement) {
+                    if (isSaving) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(20.dp),
-                            color = Color(0xFF002817),
+                            color = DarkText,
                             strokeWidth = 2.dp
                         )
                     } else {
@@ -448,7 +452,7 @@ fun ProfilScreen(viewModel: AuthViewModel, navController: NavController) {
                             "Enregistrer",
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF002817)
+                            color = DarkText
                         )
                     }
                 }
