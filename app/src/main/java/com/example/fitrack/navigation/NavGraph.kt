@@ -1,11 +1,13 @@
 package com.example.fitrack.navigation
 
+import android.app.Application
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -162,20 +164,23 @@ fun FitTrackNavGraph(
                 )
             }
             composable(ROUTE_PODOMETRE) {
+                val application = LocalContext.current.applicationContext as Application
                 PodometreScreen(
-                    sensorViewModel = viewModel(),
+                    sensorViewModel = viewModel(factory = SensorViewModel.factory(application)),
                     objectifViewModel = objectifViewModel
                 )
             }
             composable(ROUTE_GPS) {
                 GpsTrajetScreen(gpsViewModel = viewModel())
             }
-
             composable(ROUTE_AVATAR) {
                 AvatarScreen(
                     avatarViewModel = viewModel(factory = AvatarViewModel.Factory),
                     userId = userId
                 )
+            }
+            composable(ROUTE_LEADERBOARD) {
+                LeaderboardScreen(socialViewModel = viewModel())
             }
         }
     }

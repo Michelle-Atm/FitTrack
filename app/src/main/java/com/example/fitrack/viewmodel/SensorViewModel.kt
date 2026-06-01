@@ -7,7 +7,8 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.SystemClock
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -16,12 +17,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class SensorViewModel(application: Application) : AndroidViewModel(application), SensorEventListener {
+interface SensorBridge {
+    val disponible: Boolean
+    fun inscrire(listener: SensorEventListener): Boolean
+    fun desinscrire(listener: SensorEventListener)
+}
 
-    private val sensorManager =
-        application.getSystemService(Context.SENSOR_SERVICE) as SensorManager
-    private val capteurPas: Sensor? =
-        sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
+class SensorViewModel(
+    private val bridge: SensorBridge,
+    private val clock: () -> Long = { SystemClock.elapsedRealtime() }
+) : ViewModel(), SensorEventListener {
 
     private val _pasAujourdhui = MutableStateFlow(0)
     val pasAujourdhui: StateFlow<Int> = _pasAujourdhui.asStateFlow()
@@ -32,7 +37,6 @@ class SensorViewModel(application: Application) : AndroidViewModel(application),
     private val _dureeActiveMinutes = MutableStateFlow(0)
     val dureeActiveMinutes: StateFlow<Int> = _dureeActiveMinutes.asStateFlow()
 
-    // Null tant que le premier event capteur n'est pas reçu
     private var baselinePas: Int? = null
     private var debutSession: Long = 0L
     private var timerJob: Job? = null
@@ -42,42 +46,61 @@ class SensorViewModel(application: Application) : AndroidViewModel(application),
     }
 
     private fun demarrer() {
-        if (capteurPas == null) return
+        if (!bridge.disponible) return
         baselinePas = null
-        debutSession = SystemClock.elapsedRealtime()
+        debutSession = clock()
         _estActif.value = true
-        sensorManager.registerListener(this, capteurPas, SensorManager.SENSOR_DELAY_NORMAL)
+        bridge.inscrire(this)
         timerJob = viewModelScope.launch {
             while (true) {
                 delay(60_000L)
-                _dureeActiveMinutes.value =
-                    ((SystemClock.elapsedRealtime() - debutSession) / 60_000L).toInt()
+                _dureeActiveMinutes.value = ((clock() - debutSession) / 60_000L).toInt()
             }
         }
     }
 
     private fun arreter() {
-        sensorManager.unregisterListener(this)
+        bridge.desinscrire(this)
         timerJob?.cancel()
         _estActif.value = false
-        // Figer la durée finale
         if (debutSession > 0L) {
-            _dureeActiveMinutes.value =
-                ((SystemClock.elapsedRealtime() - debutSession) / 60_000L).toInt()
+            _dureeActiveMinutes.value = ((clock() - debutSession) / 60_000L).toInt()
         }
     }
 
-    override fun onSensorChanged(event: SensorEvent) {
-        if (event.sensor.type != Sensor.TYPE_STEP_COUNTER) return
-        val rawSteps = event.values[0].toInt()
-        // Premier event → définir la baseline pour compter depuis 0
+    // internal pour permettre les tests unitaires sans SensorEvent Android
+    internal fun traiterEvenementPas(rawSteps: Int) {
         if (baselinePas == null) baselinePas = rawSteps
         _pasAujourdhui.value = rawSteps - (baselinePas ?: rawSteps)
     }
 
+    override fun onSensorChanged(event: SensorEvent) {
+        if (event.sensor.type != Sensor.TYPE_STEP_COUNTER) return
+        traiterEvenementPas(event.values[0].toInt())
+    }
+
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 
-    override fun onCleared() {
+    public override fun onCleared() {
         arreter()
+    }
+
+    companion object {
+        fun factory(application: Application): ViewModelProvider.Factory =
+            object : ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST")
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    val sm = application.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+                    val sensor = sm.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
+                    val bridge = object : SensorBridge {
+                        override val disponible = sensor != null
+                        override fun inscrire(listener: SensorEventListener) =
+                            sm.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_NORMAL)
+                        override fun desinscrire(listener: SensorEventListener) =
+                            sm.unregisterListener(listener)
+                    }
+                    return SensorViewModel(bridge) as T
+                }
+            }
     }
 }
