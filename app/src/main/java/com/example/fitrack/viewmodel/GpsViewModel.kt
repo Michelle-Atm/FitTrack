@@ -6,7 +6,12 @@ import android.location.Location
 import android.os.Looper
 import android.os.SystemClock
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.fitrack.model.Seance
+import com.example.fitrack.repository.ObjectifRepository
+import com.example.fitrack.repository.firestore.FirestoreObjectifRepository
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -21,7 +26,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class GpsViewModel(application: Application) : AndroidViewModel(application) {
+class GpsViewModel(
+    application: Application,
+    private val objectifRepository: ObjectifRepository
+) : AndroidViewModel(application) {
 
     private val fusedLocationClient: FusedLocationProviderClient =
         LocationServices.getFusedLocationProviderClient(application)
@@ -106,9 +114,20 @@ class GpsViewModel(application: Application) : AndroidViewModel(application) {
         _vitesseCourante.value = 0f
     }
 
-    fun terminerEtSauvegarder() {
+    fun terminerEtSauvegarder(userId: String, typeSeance: String = "cardio") {
+        val distance = _distanceTotale.value
+        val duree = _dureeSecondes.value
+        val seance = Seance(
+            userId = userId,
+            date = System.currentTimeMillis(),
+            dureeMinutes = maxOf(1, duree / 60),
+            type = typeSeance,
+            caloriesDepensees = (distance * 60.0).coerceAtLeast(0.0)
+        )
         arreterEnregistrement()
-        // TODO équipe Sprint 2 P2 : persister la séance GPS dans Firestore
+        viewModelScope.launch {
+            objectifRepository.ajouterSeance(seance)
+        }
         _trajetGps.value = emptyList()
         _distanceTotale.value = 0f
         _dureeSecondes.value = 0
@@ -116,5 +135,14 @@ class GpsViewModel(application: Application) : AndroidViewModel(application) {
 
     override fun onCleared() {
         arreterEnregistrement()
+    }
+
+    companion object {
+        fun factory(application: Application): ViewModelProvider.Factory =
+            object : ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST")
+                override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                    GpsViewModel(application, FirestoreObjectifRepository()) as T
+            }
     }
 }

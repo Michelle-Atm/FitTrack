@@ -52,7 +52,7 @@ import com.example.fitrack.viewmodel.GpsViewModel
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun GpsTrajetScreen(gpsViewModel: GpsViewModel) {
+fun GpsTrajetScreen(gpsViewModel: GpsViewModel, userId: String = "") {
     val locationPermissions = rememberMultiplePermissionsState(
         listOf(
             Manifest.permission.ACCESS_FINE_LOCATION,
@@ -190,7 +190,7 @@ fun GpsTrajetScreen(gpsViewModel: GpsViewModel) {
                 }
                 if (trajetGps.isNotEmpty()) {
                     OutlinedButton(
-                        onClick = { gpsViewModel.terminerEtSauvegarder() },
+                        onClick = { gpsViewModel.terminerEtSauvegarder(userId) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         border = androidx.compose.foundation.BorderStroke(1.dp, MintFit)

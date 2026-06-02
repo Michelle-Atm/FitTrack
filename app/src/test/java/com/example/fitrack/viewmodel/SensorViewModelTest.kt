@@ -34,7 +34,7 @@ class SensorViewModelTest {
 
     @Test
     fun `etat initial - inactif, zero pas, zero minutes`() {
-        val vm = SensorViewModel(FakeSensorBridge())
+        val vm = SensorViewModel(FakeSensorBridge(), { 0L })
         assertFalse(vm.estActif.value)
         assertEquals(0, vm.pasAujourdhui.value)
         assertEquals(0, vm.dureeActiveMinutes.value)
@@ -43,7 +43,7 @@ class SensorViewModelTest {
     @Test
     fun `si capteur indisponible, demarrer ne change pas etat`() {
         val bridge = FakeSensorBridge(disponible = false)
-        val vm = SensorViewModel(bridge)
+        val vm = SensorViewModel(bridge, { 0L })
         vm.toggleActif()
         assertFalse(vm.estActif.value)
         assertFalse(bridge.inscrit)
@@ -52,42 +52,46 @@ class SensorViewModelTest {
     @Test
     fun `toggleActif active le capteur et met estActif a true`() {
         val bridge = FakeSensorBridge()
-        val vm = SensorViewModel(bridge)
+        val vm = SensorViewModel(bridge, { 0L })
         vm.toggleActif()
         assertTrue(vm.estActif.value)
         assertTrue(bridge.inscrit)
+        vm.onCleared() // cancel timer to avoid leaking onto testDispatcher
     }
 
     // ─── Comptage des pas ────────────────────────────────────────────────────
 
     @Test
     fun `premier evenement etablit la baseline et donne zero pas`() {
-        val vm = SensorViewModel(FakeSensorBridge())
+        val vm = SensorViewModel(FakeSensorBridge(), { 0L })
         vm.toggleActif()
         vm.traiterEvenementPas(5_000)
         assertEquals(0, vm.pasAujourdhui.value)
+        vm.onCleared()
     }
 
     @Test
     fun `evenements suivants comptent les pas depuis la baseline`() {
-        val vm = SensorViewModel(FakeSensorBridge())
+        val vm = SensorViewModel(FakeSensorBridge(), { 0L })
         vm.toggleActif()
         vm.traiterEvenementPas(5_000)
         vm.traiterEvenementPas(5_050)
         assertEquals(50, vm.pasAujourdhui.value)
         vm.traiterEvenementPas(5_200)
         assertEquals(200, vm.pasAujourdhui.value)
+        vm.onCleared()
     }
 
     @Test
     fun `les pas s accumulent correctement sur plusieurs evenements`() {
-        val vm = SensorViewModel(FakeSensorBridge())
+        val vm = SensorViewModel(FakeSensorBridge(), { 0L })
         vm.toggleActif()
         vm.traiterEvenementPas(1_000)  // baseline
         vm.traiterEvenementPas(1_100)
         vm.traiterEvenementPas(1_250)
         vm.traiterEvenementPas(1_300)
         assertEquals(300, vm.pasAujourdhui.value)
+        vm.onCleared()
     }
 
     // ─── Arrêt / nettoyage ───────────────────────────────────────────────────
@@ -95,7 +99,7 @@ class SensorViewModelTest {
     @Test
     fun `arreter desactive et desinscrit le capteur`() {
         val bridge = FakeSensorBridge()
-        val vm = SensorViewModel(bridge)
+        val vm = SensorViewModel(bridge, { 0L })
         vm.toggleActif()
         assertTrue(bridge.inscrit)
         vm.toggleActif()
@@ -105,7 +109,7 @@ class SensorViewModelTest {
 
     @Test
     fun `arret fige la duree calculee depuis le debut de session`() {
-        val clock = FakeClock(0L)
+        val clock = FakeClock(1L)
         val vm = SensorViewModel(FakeSensorBridge(), clock::maintenant)
         vm.toggleActif()
         clock.avancer(120_000L) // +2 minutes
@@ -113,20 +117,23 @@ class SensorViewModelTest {
         assertEquals(2, vm.dureeActiveMinutes.value)
     }
 
+    // runTest(testDispatcher) shares the scheduler so advanceTimeBy advances the
+    // viewModelScope timer; vm.onCleared() stops the while(true) loop before runTest drains.
     @Test
-    fun `le timer met a jour la duree pendant la session`() = runTest {
-        val clock = FakeClock(0L)
+    fun `le timer met a jour la duree pendant la session`() = runTest(testDispatcher) {
+        val clock = FakeClock(1L)
         val vm = SensorViewModel(FakeSensorBridge(), clock::maintenant)
         vm.toggleActif()
         clock.avancer(60_000L)
         advanceTimeBy(60_001L)
         assertEquals(1, vm.dureeActiveMinutes.value)
+        vm.onCleared()
     }
 
     @Test
     fun `onCleared arrete le capteur et le timer`() {
         val bridge = FakeSensorBridge()
-        val vm = SensorViewModel(bridge)
+        val vm = SensorViewModel(bridge, { 0L })
         vm.toggleActif()
         assertTrue(bridge.inscrit)
         vm.onCleared()
@@ -136,7 +143,7 @@ class SensorViewModelTest {
 
     @Test
     fun `la baseline se reinitialise a chaque nouvelle session`() {
-        val vm = SensorViewModel(FakeSensorBridge())
+        val vm = SensorViewModel(FakeSensorBridge(), { 0L })
         // Session 1
         vm.toggleActif()
         vm.traiterEvenementPas(1_000)
@@ -148,6 +155,7 @@ class SensorViewModelTest {
         vm.traiterEvenementPas(2_000)  // nouvelle baseline
         vm.traiterEvenementPas(2_030)
         assertEquals(30, vm.pasAujourdhui.value)
+        vm.toggleActif() // stop session 2 timer
     }
 }
 

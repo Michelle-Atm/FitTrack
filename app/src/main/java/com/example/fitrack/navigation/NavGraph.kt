@@ -171,7 +171,11 @@ fun FitTrackNavGraph(
                 )
             }
             composable(ROUTE_GPS) {
-                GpsTrajetScreen(gpsViewModel = viewModel())
+                val application = LocalContext.current.applicationContext as Application
+                GpsTrajetScreen(
+                    gpsViewModel = viewModel(factory = GpsViewModel.factory(application)),
+                    userId = userId
+                )
             }
             composable(ROUTE_AVATAR) {
                 AvatarScreen(
@@ -180,7 +184,11 @@ fun FitTrackNavGraph(
                 )
             }
             composable(ROUTE_LEADERBOARD) {
-                LeaderboardScreen(socialViewModel = viewModel())
+                LeaderboardScreen(
+                    socialViewModel = viewModel(factory = SocialViewModel.Factory),
+                    userId = userId,
+                    categorie = user?.experience ?: "debutant"
+                )
             }
         }
     }

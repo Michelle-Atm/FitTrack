@@ -226,4 +226,74 @@ class ObjectifViewModelTest {
         assertEquals(1, repo.objectifsMisAJour.size)
         assertEquals(2, repo.objectifsMisAJour[0].seancesEffectuees)
     }
+
+    // --- profils contrastés : sédentaire / sportif / débutant ---
+
+    @Test
+    fun `profil sedentaire - objectif bas atteint a 93 pourcent`() {
+        val objectif = Objectif(
+            caloriesObjectif = 1500.0, caloriesActuelles = 1400.0,   // 93 %
+            proteinesObjectif = 60.0,  proteinesActuelles = 60.0,
+            seancesObjectif = 1, seancesEffectuees = 1,
+            pasObjectif = 3000, pasActuels = 3000
+        )
+        assertTrue(viewModel.objectifAtteint(objectif))
+        assertEquals(1f, viewModel.calculerProgression(objectif).progressionPas)
+    }
+
+    @Test
+    fun `profil sportif - memes calories absolues que sedentaire ne suffisent pas`() {
+        val objectif = Objectif(
+            caloriesObjectif = 3500.0, caloriesActuelles = 1400.0,   // 40 % — insuffisant
+            proteinesObjectif = 180.0, proteinesActuelles = 180.0,
+            seancesObjectif = 5, seancesEffectuees = 5,
+            pasObjectif = 15000, pasActuels = 15000
+        )
+        assertFalse(viewModel.objectifAtteint(objectif))
+        assertEquals(0.4f, viewModel.calculerProgression(objectif).progressionCalories, 0.01f)
+    }
+
+    @Test
+    fun `contraste - meme apport calorique, progression sedentaire 93 pct vs sportif 57 pct`() {
+        val apportCommun = 2000.0
+        val objSedentaire = Objectif(caloriesObjectif = 1500.0, caloriesActuelles = apportCommun)
+        val objSportif   = Objectif(caloriesObjectif = 3500.0, caloriesActuelles = apportCommun)
+
+        // sédentaire : plafonné à 1.0 (dépassement)
+        assertEquals(1f, viewModel.calculerProgression(objSedentaire).progressionCalories)
+        // sportif : ~57 %
+        assertEquals(0.57f, viewModel.calculerProgression(objSportif).progressionCalories, 0.01f)
+    }
+
+    @Test
+    fun `profil debutant - une seule seance suffit pour atteindre objectif hebdo`() {
+        val objectif = Objectif(
+            caloriesObjectif = 1800.0, caloriesActuelles = 1700.0,   // 94 %
+            proteinesObjectif = 80.0,  proteinesActuelles = 75.0,    // 93 %
+            seancesObjectif = 1, seancesEffectuees = 1
+        )
+        assertTrue(viewModel.objectifAtteint(objectif))
+    }
+
+    @Test
+    fun `profil sportif - 4 seances sur 5 ne valide pas objectif meme si nutrition ok`() {
+        val objectif = Objectif(
+            caloriesObjectif = 3200.0, caloriesActuelles = 3200.0,
+            proteinesObjectif = 160.0, proteinesActuelles = 160.0,
+            seancesObjectif = 5, seancesEffectuees = 4   // pas assez
+        )
+        assertFalse(viewModel.objectifAtteint(objectif))
+    }
+
+    @Test
+    fun `profil debutant - loggerSeance complete l objectif hebdo minimal`() = runTest {
+        val objectif = Objectif(id = "u1_0", userId = "u1", seancesObjectif = 1, seancesEffectuees = 0)
+        repo.objectifJournalierResult = Result.success(objectif)
+        repo.ajouterSeanceResult = Result.success(Unit)
+
+        viewModel.loggerSeance(Seance(dureeMinutes = 20, type = "marche"), "u1")
+        advanceUntilIdle()
+
+        assertEquals(1, repo.objectifsMisAJour[0].seancesEffectuees)
+    }
 }

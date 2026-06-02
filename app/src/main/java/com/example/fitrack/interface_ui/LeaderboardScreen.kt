@@ -37,6 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.fitrack.model.ProfilPublic
 import com.example.fitrack.ui.theme.AmberFit
@@ -48,7 +49,15 @@ import com.example.fitrack.ui.theme.VioletFit
 import com.example.fitrack.viewmodel.SocialViewModel
 
 @Composable
-fun LeaderboardScreen(socialViewModel: SocialViewModel) {
+fun LeaderboardScreen(
+    socialViewModel: SocialViewModel,
+    userId: String = "",
+    categorie: String = "debutant"
+) {
+    LaunchedEffect(userId) {
+        if (userId.isNotEmpty()) socialViewModel.chargerClassement(userId, categorie)
+    }
+
     val maCategorie by socialViewModel.maCategorie.collectAsStateWithLifecycle()
     val monRang by socialViewModel.monRang.collectAsStateWithLifecycle()
     val monScoreHebdo by socialViewModel.monScoreHebdo.collectAsStateWithLifecycle()
