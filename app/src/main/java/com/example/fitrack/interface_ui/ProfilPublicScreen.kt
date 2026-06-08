@@ -45,6 +45,8 @@ import com.example.fitrack.ui.theme.DarkBG
 import com.example.fitrack.ui.theme.MintFit
 import com.example.fitrack.ui.theme.TextDim
 import com.example.fitrack.ui.theme.VioletFit
+import com.example.fitrack.utils.emojiAnimal
+import com.example.fitrack.utils.etatEmoji
 import com.example.fitrack.viewmodel.SocialViewModel
 
 @Composable
@@ -251,18 +253,3 @@ private fun categorieColor(categorie: String): Color = when (categorie) {
     else            -> TextDim
 }
 
-private fun emojiAnimal(espece: String): String = when (espece) {
-    "renard"   -> "🦊"
-    "pingouin" -> "🐧"
-    "panda"    -> "🐼"
-    "axolotl"  -> "🦎"
-    else       -> "🐾"
-}
-
-private fun etatEmoji(etat: String): String = when (etat) {
-    "champion" -> "🏆"
-    "heureux"  -> "😊"
-    "neutre"   -> "😐"
-    "triste"   -> "😢"
-    else       -> "🐾"
-}

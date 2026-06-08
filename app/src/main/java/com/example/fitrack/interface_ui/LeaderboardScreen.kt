@@ -47,6 +47,7 @@ import com.example.fitrack.ui.theme.DarkBG
 import com.example.fitrack.ui.theme.MintFit
 import com.example.fitrack.ui.theme.TextDim
 import com.example.fitrack.ui.theme.VioletFit
+import com.example.fitrack.utils.emojiAnimal
 import com.example.fitrack.viewmodel.SocialViewModel
 
 @Composable
@@ -62,12 +63,14 @@ fun LeaderboardScreen(
 
     val maCategorie by socialViewModel.maCategorie.collectAsStateWithLifecycle()
     val monRang by socialViewModel.monRang.collectAsStateWithLifecycle()
+    val monRangCategorie by socialViewModel.monRangCategorie.collectAsStateWithLifecycle()
     val monScoreHebdo by socialViewModel.monScoreHebdo.collectAsStateWithLifecycle()
     val classementGlobal by socialViewModel.classementGlobal.collectAsStateWithLifecycle()
     val classementCategorie by socialViewModel.classementCategorie.collectAsStateWithLifecycle()
 
     var tabSelectionne by remember { mutableIntStateOf(0) }
     val classement = if (tabSelectionne == 0) classementGlobal else classementCategorie
+    val rangAffiche = if (tabSelectionne == 0) monRang else monRangCategorie
 
     Column(
         modifier = Modifier
@@ -128,7 +131,7 @@ fun LeaderboardScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = "#$monRang",
+                    text = "#$rangAffiche",
                     color = VioletFit,
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
                     modifier = Modifier.width(52.dp)
@@ -319,10 +322,3 @@ private fun LeaderboardRow(
     }
 }
 
-private fun emojiAnimal(espece: String): String = when (espece) {
-    "renard"   -> "🦊"
-    "pingouin" -> "🐧"
-    "panda"    -> "🐼"
-    "axolotl"  -> "🦎"
-    else       -> "🐾"
-}
