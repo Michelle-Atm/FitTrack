@@ -2,6 +2,7 @@ package com.example.fitrack.interface_ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -20,6 +21,7 @@ import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -28,6 +30,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -49,6 +53,17 @@ import com.example.fitrack.ui.theme.VioletFit
 
 @Composable
 fun HomeScreen(user: User?, navController: NavController) {
+    if (user == null) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(DarkBG),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = VioletFit)
+        }
+        return
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -58,9 +73,10 @@ fun HomeScreen(user: User?, navController: NavController) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Bonjour, ${user?.nom?.ifBlank { user.email } ?: ""}",
+            text = "Bonjour, ${user.nom.ifBlank { user.email }}",
             style = MaterialTheme.typography.headlineMedium,
-            color = Color.White
+            color = Color.White,
+            modifier = Modifier.semantics { testTag = "home_greeting" }
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
@@ -69,7 +85,7 @@ fun HomeScreen(user: User?, navController: NavController) {
             color = TextDim
         )
         Text(
-            text = "${user?.xp ?: 0} pts",
+            text = "${user.xp} pts",
             style = MaterialTheme.typography.bodyLarge.copy(
                 fontSize = 40.sp,
                 fontWeight = FontWeight.ExtraBold,
@@ -84,13 +100,13 @@ fun HomeScreen(user: User?, navController: NavController) {
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            NavShortcut(label = "Nutrition", color = MintFit) {
+            NavShortcut(label = "Nutrition", color = MintFit, tag = "home_btn_nutrition") {
                 navController.navigate(ROUTE_NUTRITION)
             }
-            NavShortcut(label = "Objectifs", color = VioletFit) {
+            NavShortcut(label = "Objectifs", color = VioletFit, tag = "home_btn_objectifs") {
                 navController.navigate(ROUTE_OBJECTIFS)
             }
-            NavShortcut(label = "Mon Profil", color = CardBG) {
+            NavShortcut(label = "Mon Profil", color = CardBG, tag = "home_btn_profil") {
                 navController.navigate(ROUTE_PROFIL)
             }
         }
@@ -139,12 +155,13 @@ fun HomeScreen(user: User?, navController: NavController) {
 }
 
 @Composable
-private fun NavShortcut(label: String, color: Color, onClick: () -> Unit) {
+private fun NavShortcut(label: String, color: Color, tag: String = "", onClick: () -> Unit) {
     Button(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .height(52.dp),
+            .height(52.dp)
+            .then(if (tag.isNotEmpty()) Modifier.semantics { testTag = tag } else Modifier),
         colors = ButtonDefaults.buttonColors(containerColor = color),
         shape = RoundedCornerShape(12.dp)
     ) {

@@ -9,6 +9,7 @@ import com.example.fitrack.repository.firestore.FirestoreSocialRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 
 class SocialViewModel(
@@ -36,6 +37,9 @@ class SocialViewModel(
     private val _isChargement = MutableStateFlow(false)
     val isChargement: StateFlow<Boolean> = _isChargement.asStateFlow()
 
+    private val _profilConsulte = MutableStateFlow<ProfilPublic?>(null)
+    val profilConsulte: StateFlow<ProfilPublic?> = _profilConsulte.asStateFlow()
+
     var monUserId: String = ""
         private set
 
@@ -44,23 +48,46 @@ class SocialViewModel(
         _maCategorie.value = categorie
         viewModelScope.launch {
             _isChargement.value = true
-            socialRepository.lireClassement().onSuccess { profils ->
-                val global = profils
-                    .sortedByDescending { it.scoreHebdo }
-                    .mapIndexed { index, p -> p.copy(rang = index + 1) }
-                _classementGlobal.value = global
+            socialRepository.observerClassement()
+                .catch { _isChargement.value = false }
+                .collect { profils ->
+                    traiterProfils(profils, userId, categorie)
+                    _isChargement.value = false
+                }
+        }
+    }
 
-                val monProfil = global.firstOrNull { it.userId == userId }
-                _monRang.value = monProfil?.rang ?: 0
-                _monScoreHebdo.value = monProfil?.scoreHebdo ?: 0.0
+    fun publierMonProfil(
+        userId: String,
+        nom: String,
+        avatarEspece: String,
+        avatarEtat: String,
+        categorie: String,
+        scoreHebdo: Double,
+        xpTotal: Int,
+        niveauActuel: Int
+    ) {
+        viewModelScope.launch {
+            socialRepository.mettreAJourProfil(
+                ProfilPublic(
+                    userId = userId,
+                    nom = nom,
+                    avatarEspece = avatarEspece,
+                    avatarEtat = avatarEtat,
+                    scoreHebdo = scoreHebdo,
+                    categorie = categorie,
+                    xpTotal = xpTotal,
+                    niveauActuel = niveauActuel
+                )
+            )
+        }
+    }
 
-                val parCategorie = global
-                    .filter { it.categorie == categorie }
-                    .mapIndexed { index, p -> p.copy(rang = index + 1) }
-                _classementCategorie.value = parCategorie
-                _monRangCategorie.value = parCategorie.firstOrNull { it.userId == userId }?.rang ?: 0
+    fun chargerProfilPublic(userId: String) {
+        viewModelScope.launch {
+            socialRepository.lireProfilPublic(userId).onSuccess { profil ->
+                _profilConsulte.value = profil
             }
-            _isChargement.value = false
         }
     }
 
@@ -68,6 +95,23 @@ class SocialViewModel(
         viewModelScope.launch {
             socialRepository.mettreAJourProfil(profil)
         }
+    }
+
+    private fun traiterProfils(profils: List<ProfilPublic>, userId: String, categorie: String) {
+        val global = profils
+            .sortedByDescending { it.scoreHebdo }
+            .mapIndexed { index, p -> p.copy(rang = index + 1) }
+        _classementGlobal.value = global
+
+        val monProfil = global.firstOrNull { it.userId == userId }
+        _monRang.value = monProfil?.rang ?: 0
+        _monScoreHebdo.value = monProfil?.scoreHebdo ?: 0.0
+
+        val parCategorie = global
+            .filter { it.categorie == categorie }
+            .mapIndexed { index, p -> p.copy(rang = index + 1) }
+        _classementCategorie.value = parCategorie
+        _monRangCategorie.value = parCategorie.firstOrNull { it.userId == userId }?.rang ?: 0
     }
 
     companion object {

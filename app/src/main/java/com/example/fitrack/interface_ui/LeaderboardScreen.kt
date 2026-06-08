@@ -2,6 +2,7 @@ package com.example.fitrack.interface_ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,7 +53,8 @@ import com.example.fitrack.viewmodel.SocialViewModel
 fun LeaderboardScreen(
     socialViewModel: SocialViewModel,
     userId: String = "",
-    categorie: String = "debutant"
+    categorie: String = "debutant",
+    onClickProfil: ((String) -> Unit)? = null
 ) {
     LaunchedEffect(userId) {
         if (userId.isNotEmpty()) socialViewModel.chargerClassement(userId, categorie)
@@ -170,9 +172,21 @@ fun LeaderboardScreen(
                                 verticalAlignment = Alignment.Bottom,
                                 horizontalArrangement = Arrangement.SpaceEvenly
                             ) {
-                                PodiumItem(rang = 2, profil = classement[1], hauteur = 80.dp)
-                                PodiumItem(rang = 1, profil = classement[0], hauteur = 110.dp, couronne = true)
-                                PodiumItem(rang = 3, profil = classement[2], hauteur = 60.dp)
+                                PodiumItem(
+                                    rang = 2, profil = classement[1], hauteur = 80.dp,
+                                    onClick = if (classement[1].userId != socialViewModel.monUserId)
+                                        { { onClickProfil?.invoke(classement[1].userId) } } else null
+                                )
+                                PodiumItem(
+                                    rang = 1, profil = classement[0], hauteur = 110.dp, couronne = true,
+                                    onClick = if (classement[0].userId != socialViewModel.monUserId)
+                                        { { onClickProfil?.invoke(classement[0].userId) } } else null
+                                )
+                                PodiumItem(
+                                    rang = 3, profil = classement[2], hauteur = 60.dp,
+                                    onClick = if (classement[2].userId != socialViewModel.monUserId)
+                                        { { onClickProfil?.invoke(classement[2].userId) } } else null
+                                )
                             }
                             Spacer(Modifier.height(12.dp))
                         }
@@ -183,7 +197,9 @@ fun LeaderboardScreen(
                         LeaderboardRow(
                             rang = index + 4,
                             profil = profil,
-                            estMoi = profil.userId == socialViewModel.monUserId
+                            estMoi = profil.userId == socialViewModel.monUserId,
+                            onClick = if (profil.userId != socialViewModel.monUserId)
+                                { { onClickProfil?.invoke(profil.userId) } } else null
                         )
                     }
 
@@ -199,9 +215,13 @@ private fun PodiumItem(
     rang: Int,
     profil: ProfilPublic,
     hauteur: Dp,
-    couronne: Boolean = false
+    couronne: Boolean = false,
+    onClick: (() -> Unit)? = null
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = if (onClick != null) Modifier.clickable { onClick() } else Modifier
+    ) {
         if (couronne) {
             Text("👑", fontSize = 20.sp)
         } else {
@@ -258,12 +278,14 @@ private fun PodiumItem(
 private fun LeaderboardRow(
     rang: Int,
     profil: ProfilPublic,
-    estMoi: Boolean
+    estMoi: Boolean,
+    onClick: (() -> Unit)? = null
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(if (estMoi) VioletFit.copy(alpha = 0.08f) else Color.Transparent)
+            .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
             .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

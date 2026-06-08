@@ -7,5 +7,7 @@ data class ProfilPublic(
     val avatarEtat: String = "neutre",
     val scoreHebdo: Double = 0.0,
     val rang: Int = 0,
-    val categorie: String = "debutant"   // mirrors User.experience
+    val categorie: String = "debutant",  // mirrors User.experience
+    val xpTotal: Int = 0,
+    val niveauActuel: Int = 1
 )

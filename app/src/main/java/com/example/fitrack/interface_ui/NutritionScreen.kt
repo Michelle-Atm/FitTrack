@@ -32,6 +32,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -84,6 +86,7 @@ fun NutritionScreen(
             if (!readOnly) {
                 FloatingActionButton(
                     onClick = onAjouterRepas,
+                    modifier = Modifier.semantics { testTag = "nutrition_fab" },
                     containerColor = MintFit,
                     contentColor = DarkText,
                     shape = RoundedCornerShape(999.dp)
@@ -132,6 +135,7 @@ fun NutritionScreen(
                                 .size(40.dp)
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(Color.White.copy(alpha = 0.06f))
+                                .semantics { testTag = "nutrition_historique_btn" }
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.CalendarToday,

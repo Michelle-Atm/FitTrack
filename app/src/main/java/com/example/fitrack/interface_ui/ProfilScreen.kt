@@ -24,9 +24,11 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Pets
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.Switch
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
@@ -42,6 +44,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -52,6 +55,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -83,7 +88,12 @@ private val weekdays = listOf("L", "Ma", "Me", "J", "V", "S", "D")
 private val weekdayKeys = listOf("lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche")
 
 @Composable
-fun ProfilScreen(viewModel: AuthViewModel, navController: NavController) {
+fun ProfilScreen(
+    viewModel: AuthViewModel,
+    navController: NavController,
+    isDarkMode: Boolean = true,
+    onToggleDarkMode: () -> Unit = {}
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val utilisateurActuel by viewModel.utilisateurActuel.collectAsStateWithLifecycle()
 
@@ -107,6 +117,7 @@ fun ProfilScreen(viewModel: AuthViewModel, navController: NavController) {
     var disponibilites by remember(baseUser.uid) { mutableStateOf(baseUser.disponibilites) }
     var newAllergy by remember { mutableStateOf("") }
     var isSaving by remember { mutableStateOf(false) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
 
     val imc = remember(poids, taille) {
         val p = poids.toDoubleOrNull() ?: 0.0
@@ -140,6 +151,28 @@ fun ProfilScreen(viewModel: AuthViewModel, navController: NavController) {
                     )
             }
         }
+    }
+
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = { Text("Déconnexion", color = Color.White) },
+            text = { Text("Voulez-vous vraiment vous déconnecter ?", color = TextDim) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showLogoutDialog = false
+                    viewModel.deconnexion()
+                }) {
+                    Text("Confirmer", color = DangerFit)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog = false }) {
+                    Text("Annuler", color = Color.White)
+                }
+            },
+            containerColor = CardBG
+        )
     }
 
     Scaffold(
@@ -421,6 +454,25 @@ fun ProfilScreen(viewModel: AuthViewModel, navController: NavController) {
                     }
                 }
 
+                // Dark mode toggle
+                SectionLabel("APPARENCE")
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Mode sombre", style = MaterialTheme.typography.bodyMedium, color = Color.White)
+                    Switch(
+                        checked = isDarkMode,
+                        onCheckedChange = { onToggleDarkMode() },
+                        modifier = Modifier.semantics { testTag = "profil_dark_mode_switch" },
+                        colors = androidx.compose.material3.SwitchDefaults.colors(
+                            checkedThumbColor = MintFit,
+                            checkedTrackColor = MintFit.copy(alpha = 0.3f)
+                        )
+                    )
+                }
+
                 // Save button
                 Button(
                     onClick = {
@@ -437,7 +489,7 @@ fun ProfilScreen(viewModel: AuthViewModel, navController: NavController) {
                         viewModel.mettreAJourProfil(updated)
                     },
                     enabled = !isSaving,
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    modifier = Modifier.fillMaxWidth().height(52.dp).semantics { testTag = "profil_save_btn" },
                     colors = ButtonDefaults.buttonColors(containerColor = MintFit),
                     shape = RoundedCornerShape(12.dp)
                 ) {
@@ -461,8 +513,8 @@ fun ProfilScreen(viewModel: AuthViewModel, navController: NavController) {
 
                 // Logout
                 Button(
-                    onClick = { viewModel.deconnexion() },
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    onClick = { showLogoutDialog = true },
+                    modifier = Modifier.fillMaxWidth().height(52.dp).semantics { testTag = "profil_logout_btn" },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                     shape = RoundedCornerShape(12.dp),
                     border = androidx.compose.foundation.BorderStroke(1.5.dp, DangerFit.copy(alpha = 0.4f))

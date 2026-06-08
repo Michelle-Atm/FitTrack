@@ -48,6 +48,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -99,7 +101,10 @@ fun SaisieRepasScreen(
                 .padding(horizontal = 12.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onRetour) {
+            IconButton(
+                onClick = onRetour,
+                modifier = Modifier.semantics { testTag = "saisie_back_btn" }
+            ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Retour",
@@ -179,7 +184,7 @@ fun SaisieRepasScreen(
                             Icon(Icons.Filled.QrCodeScanner, null, tint = AmberFit, modifier = Modifier.size(18.dp))
                         }
                     },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().semantics { testTag = "saisie_search_field" },
                     shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         unfocusedBorderColor = Color.White.copy(alpha = 0.06f),
@@ -417,7 +422,7 @@ fun SaisieRepasScreen(
                     viewModel.ajouterRepas(repas, userId)
                     onRetour()
                 },
-                modifier = Modifier.fillMaxWidth().height(54.dp),
+                modifier = Modifier.fillMaxWidth().height(54.dp).semantics { testTag = "saisie_add_btn" },
                 enabled = selectedAliment != null && !isLoading,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MintFit,

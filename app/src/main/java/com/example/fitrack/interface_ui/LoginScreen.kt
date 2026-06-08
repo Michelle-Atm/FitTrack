@@ -14,6 +14,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -70,7 +72,7 @@ fun LoginScreen(viewModel: AuthViewModel, onNavigerVersInscription: () -> Unit =
                 viewModel.reinitialiserEtat()
             },
             label = { Text("Email", color = Color.Gray) },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().semantics { testTag = "login_email" },
             colors = OutlinedTextFieldDefaults.colors(
                 unfocusedBorderColor = Color.Gray,
                 focusedBorderColor = VioletFit,
@@ -99,7 +101,7 @@ fun LoginScreen(viewModel: AuthViewModel, onNavigerVersInscription: () -> Unit =
                 viewModel.reinitialiserEtat()
             },
             label = { Text("Mot de passe", color = Color.Gray) },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().semantics { testTag = "login_password" },
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
@@ -138,7 +140,7 @@ fun LoginScreen(viewModel: AuthViewModel, onNavigerVersInscription: () -> Unit =
                 text = errorMessage,
                 color = Color.Red,
                 fontSize = 13.sp,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().semantics { testTag = "login_error" }
             )
         }
 
@@ -151,7 +153,8 @@ fun LoginScreen(viewModel: AuthViewModel, onNavigerVersInscription: () -> Unit =
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp),
+                .height(56.dp)
+                .semantics { testTag = "login_button" },
             colors = ButtonDefaults.buttonColors(containerColor = VioletFit),
             shape = RoundedCornerShape(12.dp),
             enabled = !isLoading

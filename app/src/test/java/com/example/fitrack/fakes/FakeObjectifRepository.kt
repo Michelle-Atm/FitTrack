@@ -17,6 +17,7 @@ class FakeObjectifRepository : ObjectifRepository {
     var completerResult: Result<Unit> = Result.success(Unit)
 
     val objectifsMisAJour = mutableListOf<Objectif>()
+    val debloquerAppele = mutableListOf<String>()
 
     override suspend fun objectifJournalier(userId: String, date: Long) = objectifJournalierResult
     override suspend fun mettreAJourObjectif(objectif: Objectif): Result<Unit> {
@@ -27,6 +28,9 @@ class FakeObjectifRepository : ObjectifRepository {
     override suspend fun seancesUtilisateur(userId: String, dateDebut: Long, dateFin: Long) = seancesResult
     override suspend fun sideQuestsDisponibles() = sideQuestsDisponiblesResult
     override suspend fun sideQuestsUtilisateur(userId: String) = sideQuestsUtilisateurResult
-    override suspend fun debloquerSideQuest(userId: String, questId: String) = debloquerResult
+    override suspend fun debloquerSideQuest(userId: String, questId: String): Result<Unit> {
+        debloquerAppele.add(questId)
+        return debloquerResult
+    }
     override suspend fun completerSideQuest(userId: String, questId: String) = completerResult
 }

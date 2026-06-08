@@ -296,4 +296,101 @@ class ObjectifViewModelTest {
 
         assertEquals(1, repo.objectifsMisAJour[0].seancesEffectuees)
     }
+
+    // --- calculerScoreHebdo ---
+
+    @Test
+    fun `calculerScoreHebdo liste vide retourne 0`() {
+        assertEquals(0, viewModel.calculerScoreHebdo(emptyList()))
+    }
+
+    @Test
+    fun `calculerScoreHebdo objectif 100 pourcent sur un jour vaut 1000`() {
+        val p = viewModel.calculerProgression(
+            Objectif(
+                caloriesObjectif = 2000.0, caloriesActuelles = 2000.0,
+                pasObjectif = 10000, pasActuels = 10000,
+                seancesObjectif = 1, seancesEffectuees = 1
+            )
+        )
+        assertEquals(1000, viewModel.calculerScoreHebdo(listOf(p)))
+    }
+
+    @Test
+    fun `calculerScoreHebdo 7 jours a 100 pourcent vaut 7000`() {
+        val p = viewModel.calculerProgression(
+            Objectif(
+                caloriesObjectif = 2000.0, caloriesActuelles = 2000.0,
+                pasObjectif = 10000, pasActuels = 10000,
+                seancesObjectif = 1, seancesEffectuees = 1
+            )
+        )
+        assertEquals(7000, viewModel.calculerScoreHebdo(List(7) { p }))
+    }
+
+    @Test
+    fun `calculerScoreHebdo somme correcte avec progressions mixtes`() {
+        val p1 = viewModel.calculerProgression(
+            Objectif(caloriesObjectif = 2000.0, caloriesActuelles = 2000.0,
+                pasObjectif = 10000, pasActuels = 10000, seancesObjectif = 1, seancesEffectuees = 1)
+        )
+        val p2 = viewModel.calculerProgression(
+            Objectif(caloriesObjectif = 2000.0, caloriesActuelles = 1000.0,
+                pasObjectif = 10000, pasActuels = 5000, seancesObjectif = 2, seancesEffectuees = 1)
+        )
+        val score = viewModel.calculerScoreHebdo(listOf(p1, p2))
+        assertTrue(score > 1000 && score < 2000)
+    }
+
+    @Test
+    fun `calculerScoreHebdo progression zero vaut 0`() {
+        val p = viewModel.calculerProgression(Objectif())
+        assertEquals(0, viewModel.calculerScoreHebdo(listOf(p)))
+    }
+
+    // --- debloquerSideQuestsEligibles ---
+
+    @Test
+    fun `debloquerSideQuestsEligibles debloque quest si condition remplie`() = runTest {
+        val user = User(niveau = 10, xp = 1000)
+        repo.sideQuestsDisponiblesResult = Result.success(
+            listOf(SideQuest(id = "sq1", conditionDeblocage = "niveau_5"))
+        )
+        repo.sideQuestsUtilisateurResult = Result.success(emptyList())
+
+        viewModel.debloquerSideQuestsEligibles("u1", user)
+        advanceUntilIdle()
+
+        assertTrue(repo.debloquerAppele.contains("sq1"))
+    }
+
+    @Test
+    fun `debloquerSideQuestsEligibles ne debloque pas si condition non remplie`() = runTest {
+        val user = User(niveau = 2, xp = 100)
+        repo.sideQuestsDisponiblesResult = Result.success(
+            listOf(SideQuest(id = "sq1", conditionDeblocage = "niveau_10"))
+        )
+        repo.sideQuestsUtilisateurResult = Result.success(emptyList())
+
+        viewModel.debloquerSideQuestsEligibles("u1", user)
+        advanceUntilIdle()
+
+        assertTrue(repo.debloquerAppele.isEmpty())
+    }
+
+    @Test
+    fun `debloquerSideQuestsEligibles ne re-debloque pas une quest deja debloquee`() = runTest {
+        val user = User(niveau = 10)
+        repo.sideQuestsDisponiblesResult = Result.success(
+            listOf(SideQuest(id = "sq1", conditionDeblocage = "niveau_5"))
+        )
+        repo.sideQuestsUtilisateurResult = Result.success(
+            listOf(SideQuestUtilisateur(userId = "u1", questId = "sq1", debloquee = true))
+        )
+
+        viewModel.debloquerSideQuestsEligibles("u1", user)
+        advanceUntilIdle()
+
+        assertTrue(repo.debloquerAppele.isEmpty())
+    }
 }

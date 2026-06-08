@@ -33,6 +33,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -236,17 +238,27 @@ fun AvatarScreen(
             }
         }
 
-        if (historiqueEvolution.isNotEmpty()) {
-            Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(24.dp))
+        Text(
+            text = "HISTORIQUE",
+            style = MaterialTheme.typography.labelSmall,
+            color = TextDim,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 8.dp)
+        )
+        if (historiqueEvolution.isEmpty()) {
             Text(
-                text = "HISTORIQUE",
-                style = MaterialTheme.typography.labelSmall,
-                color = TextDim,
+                text = "Aucune évolution récente",
+                style = MaterialTheme.typography.bodySmall,
+                color = TextDim.copy(alpha = 0.6f),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
-                    .padding(bottom = 8.dp)
+                    .semantics { testTag = "avatar_historique_vide" }
             )
+        } else {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()

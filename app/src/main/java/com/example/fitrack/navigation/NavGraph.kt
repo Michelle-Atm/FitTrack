@@ -27,6 +27,7 @@ import com.example.fitrack.interface_ui.LoginScreen
 import com.example.fitrack.interface_ui.NutritionScreen
 import com.example.fitrack.interface_ui.ObjectifsScreen
 import com.example.fitrack.interface_ui.PodometreScreen
+import com.example.fitrack.interface_ui.ProfilPublicScreen
 import com.example.fitrack.interface_ui.ProfilScreen
 import com.example.fitrack.interface_ui.SaisieRepasScreen
 import com.example.fitrack.ui.theme.DarkBG
@@ -38,11 +39,12 @@ import com.example.fitrack.viewmodel.ObjectifViewModel
 import com.example.fitrack.viewmodel.SensorViewModel
 import com.example.fitrack.viewmodel.SocialViewModel
 
-const val ROUTE_LOGIN        = "login"
-const val ROUTE_INSCRIPTION  = "inscription"
-const val ROUTE_HOME         = "home"
-const val ROUTE_PROFIL       = "profil"
-const val ROUTE_NUTRITION    = "nutrition"
+const val ROUTE_LOGIN          = "login"
+const val ROUTE_INSCRIPTION    = "inscription"
+const val ROUTE_HOME           = "home"
+const val ROUTE_PROFIL         = "profil"
+const val ROUTE_NUTRITION      = "nutrition"
+const val ROUTE_PROFIL_PUBLIC  = "profil_public"
 const val ROUTE_SAISIE_REPAS = "saisie_repas"
 const val ROUTE_OBJECTIFS    = "objectifs"
 const val ROUTE_HISTORIQUE   = "historique_nutrition"
@@ -59,7 +61,9 @@ private val ROUTES_WITH_NAV = setOf(
 fun FitTrackNavGraph(
     authViewModel: AuthViewModel,
     nutritionViewModel: NutritionViewModel,
-    objectifViewModel: ObjectifViewModel
+    objectifViewModel: ObjectifViewModel,
+    isDarkMode: Boolean = true,
+    onToggleDarkMode: () -> Unit = {}
 ) {
     val navController = rememberNavController()
     val uiState by authViewModel.uiState.collectAsStateWithLifecycle()
@@ -121,7 +125,12 @@ fun FitTrackNavGraph(
                 HomeScreen(user = user, navController = navController)
             }
             composable(ROUTE_PROFIL) {
-                ProfilScreen(viewModel = authViewModel, navController = navController)
+                ProfilScreen(
+                    viewModel = authViewModel,
+                    navController = navController,
+                    isDarkMode = isDarkMode,
+                    onToggleDarkMode = onToggleDarkMode
+                )
             }
             composable(
                 route = "$ROUTE_NUTRITION?date={date}",
@@ -150,7 +159,8 @@ fun FitTrackNavGraph(
             composable(ROUTE_OBJECTIFS) {
                 ObjectifsScreen(
                     viewModel = objectifViewModel,
-                    userId = userId
+                    userId = userId,
+                    user = user
                 )
             }
             composable(ROUTE_HISTORIQUE) {
@@ -187,7 +197,21 @@ fun FitTrackNavGraph(
                 LeaderboardScreen(
                     socialViewModel = viewModel(factory = SocialViewModel.Factory),
                     userId = userId,
-                    categorie = user?.experience ?: "debutant"
+                    categorie = user?.experience ?: "debutant",
+                    onClickProfil = { targetUserId ->
+                        navController.navigate("$ROUTE_PROFIL_PUBLIC/$targetUserId")
+                    }
+                )
+            }
+            composable(
+                route = "$ROUTE_PROFIL_PUBLIC/{userId}",
+                arguments = listOf(navArgument("userId") { type = NavType.StringType })
+            ) { backStack ->
+                val targetUserId = backStack.arguments?.getString("userId") ?: ""
+                ProfilPublicScreen(
+                    socialViewModel = viewModel(factory = SocialViewModel.Factory),
+                    userId = targetUserId,
+                    onRetour = { navController.popBackStack() }
                 )
             }
         }

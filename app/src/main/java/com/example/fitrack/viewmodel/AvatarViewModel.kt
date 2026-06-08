@@ -30,6 +30,9 @@ class AvatarViewModel(
     private val _historiqueEvolution = MutableStateFlow<List<String>>(emptyList())
     val historiqueEvolution: StateFlow<List<String>> = _historiqueEvolution.asStateFlow()
 
+    private val _monteeDeNiveauEvent = kotlinx.coroutines.flow.MutableSharedFlow<Int>(extraBufferCapacity = 1)
+    val monteeDeNiveauEvent: kotlinx.coroutines.flow.SharedFlow<Int> = _monteeDeNiveauEvent
+
     private val _isChargement = MutableStateFlow(false)
     val isChargement: StateFlow<Boolean> = _isChargement.asStateFlow()
 
@@ -58,6 +61,7 @@ class AvatarViewModel(
                         _historiqueEvolution.value =
                             listOf("Niveau $nouveauNiveau atteint (+$xpGagne XP)") +
                             _historiqueEvolution.value
+                        _monteeDeNiveauEvent.tryEmit(nouveauNiveau)
                     }
                 }
             }

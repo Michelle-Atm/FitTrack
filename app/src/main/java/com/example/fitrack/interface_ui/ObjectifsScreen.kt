@@ -45,13 +45,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.fitrack.components.CelebrationOverlay
 import com.example.fitrack.components.ObjectifRow
 import com.example.fitrack.components.SideQuestCard
 import com.example.fitrack.model.Seance
+import com.example.fitrack.model.User
 import com.example.fitrack.ui.theme.AmberFit
 import com.example.fitrack.ui.theme.CardBG
 import com.example.fitrack.ui.theme.DarkBG
@@ -68,19 +72,35 @@ import kotlin.math.roundToInt
 @Composable
 fun ObjectifsScreen(
     viewModel: ObjectifViewModel,
-    userId: String
+    userId: String,
+    user: User? = null
 ) {
     val objectifState by viewModel.objectifUiState.collectAsStateWithLifecycle()
     val sideQuestState by viewModel.sideQuestUiState.collectAsStateWithLifecycle()
 
     var showSeanceSheet by remember { mutableStateOf(false) }
     var showScoreDetail by remember { mutableStateOf(false) }
+    var celebrationMessage by remember { mutableStateOf("") }
+    var showCelebration by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     LaunchedEffect(userId) {
         if (userId.isNotBlank()) {
             viewModel.chargerObjectifJournalier(userId)
             viewModel.chargerSideQuests(userId)
+        }
+    }
+
+    LaunchedEffect(user) {
+        if (user != null && userId.isNotBlank()) {
+            viewModel.debloquerSideQuestsEligibles(userId, user)
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.celebrationEvent.collect { message ->
+            celebrationMessage = message
+            showCelebration = true
         }
     }
 
@@ -304,6 +324,7 @@ fun ObjectifsScreen(
         ) {
             Button(
                 onClick = { showSeanceSheet = true },
+                modifier = Modifier.semantics { testTag = "objectifs_logger_btn" },
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                 shape = RoundedCornerShape(12.dp),
                 border = androidx.compose.foundation.BorderStroke(1.5.dp, VioletFit)
@@ -364,6 +385,12 @@ fun ObjectifsScreen(
         }
     }
 
+    CelebrationOverlay(
+        visible = showCelebration,
+        message = celebrationMessage,
+        onDismiss = { showCelebration = false }
+    )
+
     // BottomSheet saisie séance
     if (showSeanceSheet) {
         ModalBottomSheet(
@@ -373,6 +400,7 @@ fun ObjectifsScreen(
         ) {
             SeanceBottomSheet(
                 userId = userId,
+                poidsKg = user?.poids ?: 70.0,
                 onValider = { seance ->
                     viewModel.loggerSeance(seance, userId)
                     showSeanceSheet = false
@@ -386,6 +414,7 @@ fun ObjectifsScreen(
 @Composable
 private fun SeanceBottomSheet(
     userId: String,
+    poidsKg: Double = 70.0,
     onValider: (Seance) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -404,7 +433,6 @@ private fun SeanceBottomSheet(
     var dureeMinutes by remember { mutableFloatStateOf(30f) }
 
     val (nomActivite, met) = activites[activiteIndex]
-    val poidsKg = 70.0
     val calories = (met * poidsKg * (dureeMinutes / 60.0)).roundToInt()
 
     Column(
