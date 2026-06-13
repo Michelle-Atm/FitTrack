@@ -35,8 +35,11 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -80,6 +83,14 @@ private val levelOptions = listOf(
     "avance" to "Avancé"
 )
 
+private fun genererPseudo(prenom: String, seed: Int): String {
+    val base = prenom.trim()
+        .replace(Regex("[^a-zA-ZÀ-ÿ]"), "")
+        .take(12)
+        .replaceFirstChar { it.uppercase() }
+    return if (base.isEmpty()) "Fit${seed.coerceIn(10, 999)}" else "$base${seed.coerceIn(10, 999)}"
+}
+
 @Composable
 fun InscriptionScreen(
     viewModel: AuthViewModel,
@@ -92,7 +103,9 @@ fun InscriptionScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
-    var nom by remember { mutableStateOf("") }
+    var prenom by remember { mutableStateOf("") }
+    var pseudoSeed by remember { mutableIntStateOf((10..999).random()) }
+    val pseudo by remember { derivedStateOf { genererPseudo(prenom, pseudoSeed) } }
     var objectif by remember { mutableStateOf<String?>(null) }
     var level by remember { mutableStateOf<String?>(null) }
     var poids by remember { mutableStateOf("") }
@@ -122,8 +135,9 @@ fun InscriptionScreen(
         else -> "Obésité"
     }
 
+    val emailValide = email.isBlank() || android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
     val stepOk = when (step) {
-        1 -> email.contains("@") && password.length >= 4 && nom.length >= 2
+        1 -> emailValide && email.contains("@") && password.length >= 6 && prenom.length >= 2
         2 -> objectif != null && level != null
         3 -> poids.toDoubleOrNull() != null && taille.toIntOrNull() != null
         else -> false
@@ -181,7 +195,8 @@ fun InscriptionScreen(
                     email = email, onEmailChange = { email = it; viewModel.reinitialiserEtat() },
                     password = password, onPasswordChange = { password = it; viewModel.reinitialiserEtat() },
                     passwordVisible = passwordVisible, onToggleVisibility = { passwordVisible = !passwordVisible },
-                    nom = nom, onNomChange = { nom = it; viewModel.reinitialiserEtat() },
+                    prenom = prenom, onPrenomChange = { prenom = it; viewModel.reinitialiserEtat() },
+                    pseudo = pseudo, onRegenerPseudo = { pseudoSeed = (10..999).random() },
                     focusManager = focusManager
                 )
                 2 -> Step2(
@@ -221,7 +236,7 @@ fun InscriptionScreen(
                         step++
                     } else {
                         val user = User(
-                            nom = nom,
+                            nom = pseudo,
                             objectif = objectif ?: "",
                             experience = level ?: "debutant",
                             poids = poids.toDoubleOrNull() ?: 0.0,
@@ -266,7 +281,8 @@ private fun Step1(
     email: String, onEmailChange: (String) -> Unit,
     password: String, onPasswordChange: (String) -> Unit,
     passwordVisible: Boolean, onToggleVisibility: () -> Unit,
-    nom: String, onNomChange: (String) -> Unit,
+    prenom: String, onPrenomChange: (String) -> Unit,
+    pseudo: String, onRegenerPseudo: () -> Unit,
     focusManager: androidx.compose.ui.focus.FocusManager
 ) {
     Text(
@@ -308,10 +324,28 @@ private fun Step1(
             colors = fieldColors()
         )
         OutlinedTextField(
-            value = nom, onValueChange = onNomChange, label = { Text("Nom d'affichage", color = Color.Gray) },
+            value = prenom, onValueChange = onPrenomChange, label = { Text("Prénom", color = Color.Gray) },
             modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+            singleLine = true, shape = RoundedCornerShape(8.dp),
+            colors = fieldColors()
+        )
+        OutlinedTextField(
+            value = pseudo,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Pseudo", color = Color.Gray) },
+            modifier = Modifier.fillMaxWidth(),
+            trailingIcon = {
+                IconButton(onClick = onRegenerPseudo) {
+                    Icon(
+                        imageVector = Icons.Filled.Refresh,
+                        contentDescription = "Regénérer",
+                        tint = VioletFit
+                    )
+                }
+            },
             singleLine = true, shape = RoundedCornerShape(8.dp),
             colors = fieldColors()
         )

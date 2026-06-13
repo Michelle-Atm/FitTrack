@@ -5,8 +5,8 @@ data class User(
     val email: String = "",
     val nom: String = "",
     val objectif: String = "",           // "perte_poids" | "prise_masse" | "endurance" | "maintien"
-    val poids: Double = 0.0,             // kg
-    val taille: Int = 0,                 // cm
+    val poids: Double = 0.0,
+    val taille: Int = 0,
     val imc: Double = 0.0,
     val experience: String = "debutant", // niveau fitness : "debutant" | "intermediaire" | "avance" — détermine le programme
     val niveau: Int = 1,                 // niveau de progression dans le jeu (XP) — indépendant de l'expérience fitness
@@ -15,5 +15,9 @@ data class User(
     val blessures: List<String> = emptyList(),
     val disponibilites: List<String> = emptyList(), // ["lundi", "mercredi", "vendredi"]
     val programmePersonnalise: String = "",
-    val dateCreation: Long = 0L
+    val avatarEspece: String = "",   // "renard"|"pingouin"|"panda"|"axolotl" — vide = choix non fait
+    val streakJours: Int = 0,        // jours consécutifs d'activité
+    val dateCreation: Long = 0L,
+    val isAdmin: Boolean = false,    // posé manuellement depuis la console Firebase
+    val suspendu: Boolean = false    // suspension par un admin — bloque la connexion
 )

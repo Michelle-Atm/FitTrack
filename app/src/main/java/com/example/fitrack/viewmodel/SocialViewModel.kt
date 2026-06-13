@@ -3,6 +3,7 @@ package com.example.fitrack.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.fitrack.model.Invitation
 import com.example.fitrack.model.ProfilPublic
 import com.example.fitrack.repository.SocialRepository
 import com.example.fitrack.repository.firestore.FirestoreSocialRepository
@@ -39,6 +40,12 @@ class SocialViewModel(
 
     private val _profilConsulte = MutableStateFlow<ProfilPublic?>(null)
     val profilConsulte: StateFlow<ProfilPublic?> = _profilConsulte.asStateFlow()
+
+    private val _invitationsRecues = MutableStateFlow<List<Invitation>>(emptyList())
+    val invitationsRecues: StateFlow<List<Invitation>> = _invitationsRecues.asStateFlow()
+
+    private val _erreurInvitation = MutableStateFlow<String?>(null)
+    val erreurInvitation: StateFlow<String?> = _erreurInvitation.asStateFlow()
 
     var monUserId: String = ""
         private set
@@ -96,6 +103,36 @@ class SocialViewModel(
             socialRepository.mettreAJourProfil(profil)
         }
     }
+
+    fun envoyerInvitation(envoyeurId: String, envoyeurNom: String, destinataireId: String) {
+        viewModelScope.launch {
+            val invitation = Invitation(
+                envoyeurId = envoyeurId,
+                envoyeurNom = envoyeurNom,
+                destinataireId = destinataireId
+            )
+            socialRepository.envoyerInvitation(invitation)
+                .onFailure { _erreurInvitation.value = it.message ?: "Erreur d'invitation" }
+        }
+    }
+
+    fun chargerMesInvitations(userId: String) {
+        viewModelScope.launch {
+            socialRepository.mesInvitationsRecues(userId)
+                .onSuccess { _invitationsRecues.value = it }
+                .onFailure { _erreurInvitation.value = it.message ?: "Erreur de chargement" }
+        }
+    }
+
+    fun repondreInvitation(invitationId: String, accepte: Boolean, userId: String) {
+        viewModelScope.launch {
+            socialRepository.repondreInvitation(invitationId, accepte)
+                .onSuccess { chargerMesInvitations(userId) }
+                .onFailure { _erreurInvitation.value = it.message ?: "Erreur de réponse" }
+        }
+    }
+
+    fun reinitialiserErreur() { _erreurInvitation.value = null }
 
     private fun traiterProfils(profils: List<ProfilPublic>, userId: String, categorie: String) {
         val global = profils

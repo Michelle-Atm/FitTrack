@@ -2,6 +2,7 @@ package com.example.fitrack.interface_ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,7 +23,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -76,7 +76,8 @@ fun SaisieRepasScreen(
     viewModel: NutritionViewModel,
     userId: String,
     onRetour: () -> Unit,
-    allergiesUtilisateur: List<String> = emptyList()
+    allergiesUtilisateur: List<String> = emptyList(),
+    onScanBarcode: (() -> Unit)? = null
 ) {
     val rechercheState by viewModel.rechercheState.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -180,6 +181,11 @@ fun SaisieRepasScreen(
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(AmberFit.copy(alpha = 0.12f))
                                 .border(1.dp, AmberFit.copy(alpha = 0.27f), RoundedCornerShape(10.dp))
+                                .then(
+                                    if (onScanBarcode != null)
+                                        Modifier.clickable { onScanBarcode() }
+                                    else Modifier
+                                )
                         ) {
                             Icon(Icons.Filled.QrCodeScanner, null, tint = AmberFit, modifier = Modifier.size(18.dp))
                         }

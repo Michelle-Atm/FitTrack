@@ -74,12 +74,12 @@ fun GpsTrajetScreen(gpsViewModel: GpsViewModel, userId: String = "") {
     val distanceTotale by gpsViewModel.distanceTotale.collectAsStateWithLifecycle()
     val vitesseCourante by gpsViewModel.vitesseCourante.collectAsStateWithLifecycle()
     val dureeSecondes by gpsViewModel.dureeSecondes.collectAsStateWithLifecycle()
+    val positionActuelle by gpsViewModel.positionActuelle.collectAsStateWithLifecycle()
 
-    val defaultPosition = LatLng(48.8566, 2.3522) // Paris par défaut
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(
-            trajetGps.lastOrNull() ?: defaultPosition,
-            15f
+            trajetGps.lastOrNull() ?: positionActuelle ?: LatLng(0.0, 0.0),
+            if (positionActuelle != null || trajetGps.isNotEmpty()) 15f else 2f
         )
     }
 

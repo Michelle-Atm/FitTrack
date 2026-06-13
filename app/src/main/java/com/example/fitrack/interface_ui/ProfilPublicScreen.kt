@@ -99,7 +99,7 @@ fun ProfilPublicScreen(
             return@Column
         }
 
-        val p = profil!!
+        val p = profil ?: return@Column
 
         Column(
             modifier = Modifier

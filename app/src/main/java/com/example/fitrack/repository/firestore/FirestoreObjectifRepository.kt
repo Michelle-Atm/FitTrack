@@ -69,7 +69,8 @@ class FirestoreObjectifRepository(
         } catch (e: FirebaseFirestoreException) {
             when (e.code) {
                 FirebaseFirestoreException.Code.UNAVAILABLE,
-                FirebaseFirestoreException.Code.NOT_FOUND -> Result.success(emptyList())
+                FirebaseFirestoreException.Code.NOT_FOUND,
+                FirebaseFirestoreException.Code.FAILED_PRECONDITION -> Result.success(emptyList())
                 else -> Result.failure(e)
             }
         } catch (e: Exception) {
@@ -108,6 +109,26 @@ class FirestoreObjectifRepository(
             )
             db.collection(COLLECTION_SQ_UTILISATEURS).document(docId).set(sqUtilisateur).await()
             Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun lireSeancesRecentes(userId: String, limite: Int): Result<List<Seance>> {
+        return try {
+            val snapshot = db.collection(COLLECTION_SEANCES)
+                .whereEqualTo("userId", userId)
+                .orderBy("date", Query.Direction.DESCENDING)
+                .limit(limite.toLong())
+                .get().await()
+            Result.success(snapshot.toObjects(Seance::class.java))
+        } catch (e: FirebaseFirestoreException) {
+            when (e.code) {
+                FirebaseFirestoreException.Code.UNAVAILABLE,
+                FirebaseFirestoreException.Code.NOT_FOUND,
+                FirebaseFirestoreException.Code.FAILED_PRECONDITION -> Result.success(emptyList())
+                else -> Result.failure(e)
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }

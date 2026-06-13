@@ -11,11 +11,12 @@ class FakeAuthRepository : AuthRepository {
     var mettreAJourResult: Result<Unit> = Result.success(Unit)
     var recupererResult: Result<User> = Result.success(User(uid = "uid1"))
     var utilisateurObserve: User? = null
+    var deconnexionAppele = false
 
     override fun observerUtilisateur(): Flow<User?> = flowOf(utilisateurObserve)
     override suspend fun connexion(email: String, motDePasse: String) = connexionResult
     override suspend fun inscription(email: String, motDePasse: String, user: User) = inscriptionResult
-    override suspend fun deconnexion() {}
+    override suspend fun deconnexion() { deconnexionAppele = true }
     override suspend fun mettreAJourProfil(user: User) = mettreAJourResult
     override suspend fun recupererProfil(uid: String) = recupererResult
 }

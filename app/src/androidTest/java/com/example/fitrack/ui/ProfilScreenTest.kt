@@ -3,8 +3,8 @@ package com.example.fitrack.ui
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onAllNodes
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performScrollTo
 import androidx.navigation.compose.rememberNavController
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.fitrack.fakes.FakeAuthRepository
@@ -46,7 +46,7 @@ class ProfilScreenTest {
         composeTestRule.waitUntil(3_000) {
             composeTestRule.onAllNodes(hasTestTag("profil_save_btn")).fetchSemanticsNodes().isNotEmpty()
         }
-        composeTestRule.onNodeWithTag("profil_save_btn").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profil_save_btn").performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -55,7 +55,7 @@ class ProfilScreenTest {
         composeTestRule.waitUntil(3_000) {
             composeTestRule.onAllNodes(hasTestTag("profil_logout_btn")).fetchSemanticsNodes().isNotEmpty()
         }
-        composeTestRule.onNodeWithTag("profil_logout_btn").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profil_logout_btn").performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -64,6 +64,6 @@ class ProfilScreenTest {
         composeTestRule.waitUntil(3_000) {
             composeTestRule.onAllNodes(hasTestTag("profil_dark_mode_switch")).fetchSemanticsNodes().isNotEmpty()
         }
-        composeTestRule.onNodeWithTag("profil_dark_mode_switch").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("profil_dark_mode_switch").performScrollTo().assertIsDisplayed()
     }
 }

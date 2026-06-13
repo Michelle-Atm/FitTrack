@@ -4,9 +4,9 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onAllNodes
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.fitrack.fakes.FakeAuthRepository
 import com.example.fitrack.interface_ui.AvatarScreen
@@ -51,6 +51,6 @@ class AvatarScreenTest {
         composeTestRule.waitUntil(3_000) {
             composeTestRule.onAllNodes(hasTestTag("avatar_historique_vide")).fetchSemanticsNodes().isNotEmpty()
         }
-        composeTestRule.onNodeWithTag("avatar_historique_vide").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("avatar_historique_vide").performScrollTo().assertIsDisplayed()
     }
 }

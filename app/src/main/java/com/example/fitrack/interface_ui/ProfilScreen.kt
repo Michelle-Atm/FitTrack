@@ -23,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -92,7 +93,8 @@ fun ProfilScreen(
     viewModel: AuthViewModel,
     navController: NavController,
     isDarkMode: Boolean = true,
-    onToggleDarkMode: () -> Unit = {}
+    onToggleDarkMode: () -> Unit = {},
+    onNavigerVersAdmin: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val utilisateurActuel by viewModel.utilisateurActuel.collectAsStateWithLifecycle()
@@ -131,7 +133,7 @@ fun ProfilScreen(
         imc < 30.0 -> AmberFit
         else -> DangerFit
     }
-    val xpProgress = (baseUser.xp % 500).toFloat() / 500f
+    val xpProgress = (baseUser.xp % 300).toFloat() / 300f
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -237,7 +239,7 @@ fun ProfilScreen(
                         trackColor = Color.White.copy(alpha = 0.06f)
                     )
                     Text(
-                        text = "${baseUser.xp % 500} / 500 XP",
+                        text = "${baseUser.xp % 300} / 300 XP",
                         style = MaterialTheme.typography.labelSmall,
                         color = TextDim
                     )
@@ -510,6 +512,26 @@ fun ProfilScreen(
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
+
+                // Bouton admin — visible uniquement pour isAdmin = true
+                if (baseUser.isAdmin) {
+                    Button(
+                        onClick = onNavigerVersAdmin,
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                        shape = RoundedCornerShape(12.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.5.dp, VioletFit)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(Icons.Filled.AdminPanelSettings, null, tint = VioletFit, modifier = Modifier.size(16.dp))
+                            Text("Panneau administrateur", color = VioletFit, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
 
                 // Logout
                 Button(

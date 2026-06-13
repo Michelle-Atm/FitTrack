@@ -180,6 +180,19 @@ class AuthViewModelTest {
     }
 
     @Test
+    fun `connexion compte suspendu bloque connexion et appelle deconnexion`() = runTest {
+        repo.connexionResult = Result.success(
+            User(uid = "uid1", email = "banned@test.com", nom = "Banni", suspendu = true)
+        )
+        viewModel.connexion("banned@test.com", "password123")
+        advanceUntilIdle()
+        val state = viewModel.uiState.value
+        assertTrue(state is AuthViewModel.AuthUiState.Erreur)
+        assertTrue((state as AuthViewModel.AuthUiState.Erreur).message.contains("suspendu", ignoreCase = true))
+        assertTrue(repo.deconnexionAppele)
+    }
+
+    @Test
     fun `connexion succes meme si profil Firestore absent`() = runTest {
         // Simule un compte créé via la console Firebase sans profil Firestore
         val userMinimal = User(uid = "uid1", email = "console@test.com")

@@ -18,6 +18,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Fitrack">
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyCMXYpd6BR2xuKqwpWtjAqvHNiKMaGguSs" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

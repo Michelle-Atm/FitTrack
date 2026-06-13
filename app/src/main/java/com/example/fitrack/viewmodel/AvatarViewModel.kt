@@ -6,7 +6,9 @@ import com.example.fitrack.model.Avatar
 import com.example.fitrack.model.User
 import com.example.fitrack.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
@@ -31,7 +33,7 @@ class AvatarViewModel(
     val historiqueEvolution: StateFlow<List<String>> = _historiqueEvolution.asStateFlow()
 
     private val _monteeDeNiveauEvent = kotlinx.coroutines.flow.MutableSharedFlow<Int>(extraBufferCapacity = 1)
-    val monteeDeNiveauEvent: kotlinx.coroutines.flow.SharedFlow<Int> = _monteeDeNiveauEvent
+    val monteeDeNiveauEvent: SharedFlow<Int> = _monteeDeNiveauEvent.asSharedFlow()
 
     private val _isChargement = MutableStateFlow(false)
     val isChargement: StateFlow<Boolean> = _isChargement.asStateFlow()
@@ -70,10 +72,11 @@ class AvatarViewModel(
 
     private fun mettreAJourUi(user: User) {
         val xpDansNiveau = user.xp % XP_PAR_NIVEAU
+        val espece = user.avatarEspece.ifBlank { "renard" }
 
         _avatar.value = Avatar(
             userId = user.uid,
-            espece = "renard",
+            espece = espece,
             niveau = user.niveau,
             etatActuel = determinerEtatActuel(xpDansNiveau),
             xpCumule = user.xp

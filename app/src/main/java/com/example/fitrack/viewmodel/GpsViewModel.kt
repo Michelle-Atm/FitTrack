@@ -49,6 +49,9 @@ class GpsViewModel(
     private val _dureeSecondes = MutableStateFlow(0)
     val dureeSecondes: StateFlow<Int> = _dureeSecondes.asStateFlow()
 
+    private val _positionActuelle = MutableStateFlow<LatLng?>(null)
+    val positionActuelle: StateFlow<LatLng?> = _positionActuelle.asStateFlow()
+
     private var debutEnregistrement: Long = 0L
     private var timerJob: Job? = null
 
@@ -75,6 +78,7 @@ class GpsViewModel(
             _vitesseCourante.value =
                 if (location.hasSpeed()) location.speed * 3.6f else 0f
 
+            _positionActuelle.value = nouveauPoint
             _trajetGps.value = trajet + nouveauPoint
         }
     }
@@ -114,15 +118,23 @@ class GpsViewModel(
         _vitesseCourante.value = 0f
     }
 
-    fun terminerEtSauvegarder(userId: String, typeSeance: String = "cardio") {
+    fun terminerEtSauvegarder(userId: String, typeSeance: String = "cardio", poidsKg: Double = 70.0) {
         val distance = _distanceTotale.value
         val duree = _dureeSecondes.value
+        val metFacteur = when (typeSeance) {
+            "course"      -> 8.0
+            "velo"        -> 7.5
+            "marche"      -> 3.5
+            "musculation" -> 6.0
+            else          -> 7.0  // cardio générique
+        }
+        val dureeHeures = duree.toDouble() / 3600.0
         val seance = Seance(
             userId = userId,
             date = System.currentTimeMillis(),
             dureeMinutes = maxOf(1, duree / 60),
             type = typeSeance,
-            caloriesDepensees = (distance * 60.0).coerceAtLeast(0.0)
+            caloriesDepensees = (metFacteur * poidsKg * dureeHeures).coerceAtLeast(0.0)
         )
         arreterEnregistrement()
         viewModelScope.launch {

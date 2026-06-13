@@ -82,6 +82,12 @@ dependencies {
     // Accompanist permissions
     implementation(libs.accompanist.permissions)
 
+    // CameraX + ML Kit (scan code-barres)
+    implementation(libs.camerax.camera2)
+    implementation(libs.camerax.lifecycle)
+    implementation(libs.camerax.view)
+    implementation(libs.mlkit.barcode.scanning)
+
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)

@@ -7,6 +7,7 @@ import com.example.fitrack.repository.api.OFFProduct
 import com.example.fitrack.repository.api.OpenFoodFactsApiService
 import com.example.fitrack.repository.api.RetrofitClient
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
 import java.util.Calendar
@@ -40,6 +41,13 @@ class FirestoreNutritionRepository(
                 .orderBy("date", Query.Direction.ASCENDING)
                 .get().await()
             Result.success(snapshot.toObjects(Repas::class.java))
+        } catch (e: FirebaseFirestoreException) {
+            when (e.code) {
+                FirebaseFirestoreException.Code.UNAVAILABLE,
+                FirebaseFirestoreException.Code.NOT_FOUND,
+                FirebaseFirestoreException.Code.FAILED_PRECONDITION -> Result.success(emptyList())
+                else -> Result.failure(e)
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -54,6 +62,13 @@ class FirestoreNutritionRepository(
                 .orderBy("date", Query.Direction.DESCENDING)
                 .get().await()
             Result.success(snapshot.toObjects(Repas::class.java))
+        } catch (e: FirebaseFirestoreException) {
+            when (e.code) {
+                FirebaseFirestoreException.Code.UNAVAILABLE,
+                FirebaseFirestoreException.Code.NOT_FOUND,
+                FirebaseFirestoreException.Code.FAILED_PRECONDITION -> Result.success(emptyList())
+                else -> Result.failure(e)
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }

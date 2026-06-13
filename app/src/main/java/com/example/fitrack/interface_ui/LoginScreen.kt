@@ -41,6 +41,8 @@ fun LoginScreen(viewModel: AuthViewModel, onNavigerVersInscription: () -> Unit =
 
     val isLoading = uiState is AuthViewModel.AuthUiState.Chargement
     val errorMessage = (uiState as? AuthViewModel.AuthUiState.Erreur)?.message
+    val emailValide = email.isBlank() || android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    val emailErreur = if (!emailValide) "Format d'email invalide" else null
 
     Column(
         modifier = Modifier
@@ -89,7 +91,8 @@ fun LoginScreen(viewModel: AuthViewModel, onNavigerVersInscription: () -> Unit =
                 onNext = { focusManager.moveFocus(FocusDirection.Down) }
             ),
             singleLine = true,
-            isError = errorMessage != null
+            isError = errorMessage != null || !emailValide,
+            supportingText = emailErreur?.let { { Text(it, color = Color.Red, fontSize = 12.sp) } }
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -157,7 +160,7 @@ fun LoginScreen(viewModel: AuthViewModel, onNavigerVersInscription: () -> Unit =
                 .semantics { testTag = "login_button" },
             colors = ButtonDefaults.buttonColors(containerColor = VioletFit),
             shape = RoundedCornerShape(12.dp),
-            enabled = !isLoading
+            enabled = !isLoading && emailValide
         ) {
             if (isLoading) {
                 CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp), strokeWidth = 2.dp)

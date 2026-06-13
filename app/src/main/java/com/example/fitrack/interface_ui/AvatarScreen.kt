@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Card
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -52,7 +53,8 @@ import com.example.fitrack.viewmodel.AvatarViewModel
 @Composable
 fun AvatarScreen(
     avatarViewModel: AvatarViewModel,
-    userId: String
+    userId: String,
+    onChangerEspece: (() -> Unit)? = null
 ) {
     val avatar by avatarViewModel.avatar.collectAsStateWithLifecycle()
     val xpProgression by avatarViewModel.xpProgression.collectAsStateWithLifecycle()
@@ -147,7 +149,7 @@ fun AvatarScreen(
                     color = TextDim
                 )
                 Text(
-                    text = "${avatar?.xpCumule ?: 0} / $xpPourNiveau XP",
+                    text = "${(avatar?.xpCumule ?: 0) % xpPourNiveau} / $xpPourNiveau XP",
                     style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
                     color = VioletFit
                 )
@@ -235,6 +237,21 @@ fun AvatarScreen(
                         color = TextDim
                     )
                 }
+            }
+        }
+
+        if (onChangerEspece != null) {
+            Spacer(Modifier.height(8.dp))
+            OutlinedButton(
+                onClick = onChangerEspece,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .semantics { testTag = "avatar_changer_espece_btn" },
+                border = BorderStroke(1.dp, VioletFit.copy(alpha = 0.5f)),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Changer d'espèce", color = VioletFit)
             }
         }
 

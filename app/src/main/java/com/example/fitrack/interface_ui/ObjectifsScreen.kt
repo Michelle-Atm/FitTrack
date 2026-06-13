@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
+import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.FitnessCenter
@@ -27,6 +28,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
@@ -77,6 +79,7 @@ fun ObjectifsScreen(
 ) {
     val objectifState by viewModel.objectifUiState.collectAsStateWithLifecycle()
     val sideQuestState by viewModel.sideQuestUiState.collectAsStateWithLifecycle()
+    val seancesRecentes by viewModel.seancesRecentes.collectAsStateWithLifecycle()
 
     var showSeanceSheet by remember { mutableStateOf(false) }
     var showScoreDetail by remember { mutableStateOf(false) }
@@ -88,6 +91,7 @@ fun ObjectifsScreen(
         if (userId.isNotBlank()) {
             viewModel.chargerObjectifJournalier(userId)
             viewModel.chargerSideQuests(userId)
+            viewModel.chargerSeancesRecentes(userId)
         }
     }
 
@@ -349,6 +353,34 @@ fun ObjectifsScreen(
             }
         }
 
+        // Séances récentes
+        if (seancesRecentes.isNotEmpty()) {
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = 20.dp)
+                    .padding(top = 24.dp)
+            ) {
+                Text(
+                    text = "SÉANCES RÉCENTES",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TextDim,
+                    modifier = Modifier.padding(bottom = 10.dp)
+                )
+                seancesRecentes.take(5).forEach { seance ->
+                    SeanceRecenteCard(
+                        seance = seance,
+                        onRelog = {
+                            viewModel.loggerSeance(
+                                seance.copy(id = "", date = System.currentTimeMillis()),
+                                userId
+                            )
+                        }
+                    )
+                    Spacer(Modifier.height(8.dp))
+                }
+            }
+        }
+
         // Side Quests
         Column(
             modifier = Modifier
@@ -603,6 +635,45 @@ private fun ScoreCard(
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun SeanceRecenteCard(seance: Seance, onRelog: () -> Unit) {
+    val dateLabel = remember(seance.date) {
+        if (seance.date == 0L) "—"
+        else SimpleDateFormat("dd MMM · HH:mm", Locale.FRENCH).format(Date(seance.date))
+    }
+    val nomActivite = seance.type.replaceFirstChar { it.uppercase() }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .background(CardBG)
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = nomActivite,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                color = Color.White
+            )
+            Text(
+                text = "${seance.dureeMinutes} min · ${seance.caloriesDepensees.toInt()} kcal · $dateLabel",
+                style = MaterialTheme.typography.bodySmall,
+                color = TextDim
+            )
+        }
+        IconButton(onClick = onRelog, modifier = Modifier.size(36.dp)) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.Undo,
+                contentDescription = "Re-logger",
+                tint = VioletFit,
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }

@@ -36,7 +36,7 @@ class AuthViewModel(
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Initial)
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
-    private val _evenements = MutableSharedFlow<AuthEvenement>()
+    private val _evenements = MutableSharedFlow<AuthEvenement>(extraBufferCapacity = 1)
     val evenements: SharedFlow<AuthEvenement> = _evenements.asSharedFlow()
 
     val utilisateurActuel: StateFlow<User?> = authRepository
@@ -51,7 +51,14 @@ class AuthViewModel(
         viewModelScope.launch {
             _uiState.value = AuthUiState.Chargement
             authRepository.connexion(email.trim(), motDePasse)
-                .onSuccess { _uiState.value = AuthUiState.Succes(it) }
+                .onSuccess { utilisateur ->
+                    if (utilisateur.suspendu) {
+                        authRepository.deconnexion()
+                        _uiState.value = AuthUiState.Erreur("Compte suspendu. Contactez l'administrateur.")
+                    } else {
+                        _uiState.value = AuthUiState.Succes(utilisateur)
+                    }
+                }
                 .onFailure { _uiState.value = AuthUiState.Erreur(it.message ?: "Erreur de connexion") }
         }
     }
@@ -83,7 +90,7 @@ class AuthViewModel(
             )
             authRepository.mettreAJourProfil(userMisAJour)
                 .onSuccess {
-                    _uiState.value = AuthUiState.Initial
+                    _uiState.value = AuthUiState.Succes(userMisAJour)
                     _evenements.emit(AuthEvenement.ProfilMisAJour)
                 }
                 .onFailure {
