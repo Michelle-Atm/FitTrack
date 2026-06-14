@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -18,11 +19,18 @@ import androidx.compose.material.icons.filled.FiberManualRecord
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -75,6 +83,16 @@ fun GpsTrajetScreen(gpsViewModel: GpsViewModel, userId: String = "") {
     val vitesseCourante by gpsViewModel.vitesseCourante.collectAsStateWithLifecycle()
     val dureeSecondes by gpsViewModel.dureeSecondes.collectAsStateWithLifecycle()
     val positionActuelle by gpsViewModel.positionActuelle.collectAsStateWithLifecycle()
+    val sauvegardeEnCours by gpsViewModel.sauvegardeEnCours.collectAsStateWithLifecycle()
+    val erreurSauvegarde by gpsViewModel.erreurSauvegarde.collectAsStateWithLifecycle()
+
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(erreurSauvegarde) {
+        val err = erreurSauvegarde ?: return@LaunchedEffect
+        snackbarHostState.showSnackbar(err)
+        gpsViewModel.reinitialiserErreurSauvegarde()
+    }
 
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(
@@ -85,10 +103,23 @@ fun GpsTrajetScreen(gpsViewModel: GpsViewModel, userId: String = "") {
 
     val dureeLabel = "%02d:%02d".format(dureeSecondes / 60, dureeSecondes % 60)
 
+    Scaffold(
+        containerColor = DarkBG,
+        snackbarHost = {
+            SnackbarHost(snackbarHostState) { data ->
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = Color(0xFFE35C5C),
+                    contentColor = Color.White
+                )
+            }
+        }
+    ) { innerPadding ->
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(DarkBG)
+            .padding(innerPadding)
     ) {
         // Carte (65%)
         Box(
@@ -192,15 +223,30 @@ fun GpsTrajetScreen(gpsViewModel: GpsViewModel, userId: String = "") {
                     OutlinedButton(
                         onClick = { gpsViewModel.terminerEtSauvegarder(userId) },
                         modifier = Modifier.fillMaxWidth(),
+                        enabled = !sauvegardeEnCours,
                         shape = RoundedCornerShape(12.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, MintFit)
+                        border = androidx.compose.foundation.BorderStroke(
+                            1.dp,
+                            if (sauvegardeEnCours) MintFit.copy(alpha = 0.4f) else MintFit
+                        )
                     ) {
-                        Text("Terminer et sauvegarder", color = MintFit, fontWeight = FontWeight.Bold)
+                        if (sauvegardeEnCours) {
+                            CircularProgressIndicator(
+                                color = MintFit,
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text("Sauvegarde...", color = MintFit.copy(alpha = 0.6f), fontWeight = FontWeight.Bold)
+                        } else {
+                            Text("Terminer et sauvegarder", color = MintFit, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }
         }
     }
+    } // end Scaffold
 }
 
 private val DangerFitLocal = Color(0xFFE35C5C)

@@ -4,6 +4,7 @@ import com.example.fitrack.model.User
 import com.example.fitrack.repository.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -77,7 +78,8 @@ class FirestoreAuthRepository(
 
     override suspend fun mettreAJourProfil(user: User): Result<Unit> {
         return try {
-            db.collection(COLLECTION_USERS).document(user.uid).set(user).await()
+            // SetOptions.merge() preserves server-only fields (isAdmin, suspendu, dateCreation)
+            db.collection(COLLECTION_USERS).document(user.uid).set(user, SetOptions.merge()).await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

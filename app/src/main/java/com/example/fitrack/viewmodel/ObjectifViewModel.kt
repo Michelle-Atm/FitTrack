@@ -90,11 +90,15 @@ class ObjectifViewModel(
     }
 
     fun loggerSeance(seance: Seance, userId: String) {
+        val seanceAvecUser = seance.copy(userId = userId)
         viewModelScope.launch {
-            objectifRepository.ajouterSeance(seance.copy(userId = userId))
+            objectifRepository.ajouterSeance(seanceAvecUser)
                 .onSuccess {
+                    // Optimistic: show the session immediately in the list
+                    _seancesRecentes.value = (listOf(seanceAvecUser) + _seancesRecentes.value).take(10)
                     incrementerSeancesObjectif(userId)
                     verifierDeblocageSideQuests(userId)
+                    // Background refresh to sync with Firestore
                     chargerSeancesRecentes(userId)
                 }
                 .onFailure {
@@ -219,16 +223,20 @@ class ObjectifViewModel(
         viewModelScope.launch {
             val courant = (_objectifUiState.value as? ObjectifUiState.Succes)?.progression?.objectif
             if (courant != null) {
-                // Mise à jour optimiste immédiate : pas d'attente réseau
                 val maj = courant.copy(
                     seancesEffectuees = courant.seancesEffectuees + 1,
                     dateMAJ = System.currentTimeMillis()
                 )
+                // Optimistic update
                 _objectifUiState.value = ObjectifUiState.Succes(calculerProgression(maj))
                 if (objectifAtteint(maj)) _celebrationEvent.tryEmit("Objectif du jour atteint ! 🎉")
                 objectifRepository.mettreAJourObjectif(maj)
+                    .onFailure {
+                        // Rollback to previous state if Firestore write fails
+                        _objectifUiState.value = ObjectifUiState.Succes(calculerProgression(courant))
+                    }
             } else {
-                // Fallback : lire Firestore si l'état n'est pas encore chargé
+                // Fallback: read from Firestore if state not yet loaded
                 objectifRepository.objectifJournalier(userId, debutJournee())
                     .onSuccess { objectif ->
                         val maj = objectif.copy(
@@ -236,8 +244,10 @@ class ObjectifViewModel(
                             dateMAJ = System.currentTimeMillis()
                         )
                         objectifRepository.mettreAJourObjectif(maj)
-                        _objectifUiState.value = ObjectifUiState.Succes(calculerProgression(maj))
-                        if (objectifAtteint(maj)) _celebrationEvent.tryEmit("Objectif du jour atteint ! 🎉")
+                            .onSuccess {
+                                _objectifUiState.value = ObjectifUiState.Succes(calculerProgression(maj))
+                                if (objectifAtteint(maj)) _celebrationEvent.tryEmit("Objectif du jour atteint ! 🎉")
+                            }
                     }
             }
         }

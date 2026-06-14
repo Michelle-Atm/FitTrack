@@ -59,18 +59,19 @@ class FirestoreObjectifRepository(
 
     override suspend fun seancesUtilisateur(userId: String, dateDebut: Long, dateFin: Long): Result<List<Seance>> {
         return try {
+            // No orderBy to avoid requiring a composite index — sorted in Kotlin instead
             val snapshot = db.collection(COLLECTION_SEANCES)
                 .whereEqualTo("userId", userId)
                 .whereGreaterThanOrEqualTo("date", dateDebut)
                 .whereLessThan("date", dateFin)
-                .orderBy("date", Query.Direction.DESCENDING)
                 .get().await()
-            Result.success(snapshot.toObjects(Seance::class.java))
+            val seances = snapshot.toObjects(Seance::class.java)
+                .sortedByDescending { it.date }
+            Result.success(seances)
         } catch (e: FirebaseFirestoreException) {
             when (e.code) {
                 FirebaseFirestoreException.Code.UNAVAILABLE,
-                FirebaseFirestoreException.Code.NOT_FOUND,
-                FirebaseFirestoreException.Code.FAILED_PRECONDITION -> Result.success(emptyList())
+                FirebaseFirestoreException.Code.NOT_FOUND -> Result.success(emptyList())
                 else -> Result.failure(e)
             }
         } catch (e: Exception) {
@@ -116,17 +117,19 @@ class FirestoreObjectifRepository(
 
     override suspend fun lireSeancesRecentes(userId: String, limite: Int): Result<List<Seance>> {
         return try {
+            // No orderBy to avoid requiring a composite Firestore index — sorted in Kotlin instead
             val snapshot = db.collection(COLLECTION_SEANCES)
                 .whereEqualTo("userId", userId)
-                .orderBy("date", Query.Direction.DESCENDING)
-                .limit(limite.toLong())
+                .limit((limite * 3).toLong()) // fetch extra to compensate for Kotlin sort + limit
                 .get().await()
-            Result.success(snapshot.toObjects(Seance::class.java))
+            val seances = snapshot.toObjects(Seance::class.java)
+                .sortedByDescending { it.date }
+                .take(limite)
+            Result.success(seances)
         } catch (e: FirebaseFirestoreException) {
             when (e.code) {
                 FirebaseFirestoreException.Code.UNAVAILABLE,
-                FirebaseFirestoreException.Code.NOT_FOUND,
-                FirebaseFirestoreException.Code.FAILED_PRECONDITION -> Result.success(emptyList())
+                FirebaseFirestoreException.Code.NOT_FOUND -> Result.success(emptyList())
                 else -> Result.failure(e)
             }
         } catch (e: Exception) {

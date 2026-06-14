@@ -50,23 +50,27 @@ class AvatarViewModel(
 
     fun ajouterXp(uid: String, xpGagne: Int) {
         viewModelScope.launch {
-            authRepository.recupererProfil(uid).onSuccess { user ->
-                val nouvelleXp = user.xp + xpGagne
-                val nouveauNiveau = calculerNiveau(nouvelleXp)
-                val monteeDeNiveau = nouveauNiveau > user.niveau
+            authRepository.recupererProfil(uid)
+                .onFailure { return@launch }
+                .onSuccess { user ->
+                    val nouvelleXp = user.xp + xpGagne
+                    val nouveauNiveau = calculerNiveau(nouvelleXp)
+                    val monteeDeNiveau = nouveauNiveau > user.niveau
+                    val userMisAJour = user.copy(xp = nouvelleXp, niveau = nouveauNiveau)
 
-                val userMisAJour = user.copy(xp = nouvelleXp, niveau = nouveauNiveau)
-
-                authRepository.mettreAJourProfil(userMisAJour).onSuccess {
-                    mettreAJourUi(userMisAJour)
-                    if (monteeDeNiveau) {
-                        _historiqueEvolution.value =
-                            listOf("Niveau $nouveauNiveau atteint (+$xpGagne XP)") +
-                            _historiqueEvolution.value
-                        _monteeDeNiveauEvent.tryEmit(nouveauNiveau)
-                    }
+                    authRepository.mettreAJourProfil(userMisAJour)
+                        .onFailure { return@onSuccess }
+                        .onSuccess {
+                            mettreAJourUi(userMisAJour)
+                            if (monteeDeNiveau) {
+                                _historiqueEvolution.value =
+                                    listOf("Niveau $nouveauNiveau atteint (+$xpGagne XP)") +
+                                    _historiqueEvolution.value
+                                // Emit level-up event only after confirmed Firestore write
+                                _monteeDeNiveauEvent.tryEmit(nouveauNiveau)
+                            }
+                        }
                 }
-            }
         }
     }
 

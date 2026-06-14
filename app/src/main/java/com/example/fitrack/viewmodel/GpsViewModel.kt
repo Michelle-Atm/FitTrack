@@ -25,6 +25,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 
 class GpsViewModel(
     application: Application,
@@ -52,6 +54,12 @@ class GpsViewModel(
     private val _positionActuelle = MutableStateFlow<LatLng?>(null)
     val positionActuelle: StateFlow<LatLng?> = _positionActuelle.asStateFlow()
 
+    private val _sauvegardeEnCours = MutableStateFlow(false)
+    val sauvegardeEnCours: StateFlow<Boolean> = _sauvegardeEnCours.asStateFlow()
+
+    private val _erreurSauvegarde = MutableStateFlow<String?>(null)
+    val erreurSauvegarde: StateFlow<String?> = _erreurSauvegarde.asStateFlow()
+
     private var debutEnregistrement: Long = 0L
     private var timerJob: Job? = null
 
@@ -62,6 +70,8 @@ class GpsViewModel(
     private val locationCallback = object : LocationCallback() {
         override fun onLocationResult(result: LocationResult) {
             val location = result.lastLocation ?: return
+            // Ignore locations with poor accuracy (> 25m) to avoid GPS jitter
+            if (location.hasAccuracy() && location.accuracy > 25f) return
             val nouveauPoint = LatLng(location.latitude, location.longitude)
             val trajet = _trajetGps.value
 
@@ -72,7 +82,10 @@ class GpsViewModel(
                     nouveauPoint.latitude, nouveauPoint.longitude,
                     mesure
                 )
-                _distanceTotale.value += mesure[0] / 1_000f
+                // Ignore jumps > 200m in 2s (GPS bounce artifact)
+                if (mesure[0] <= 200f) {
+                    _distanceTotale.value += mesure[0] / 1_000f
+                }
             }
 
             _vitesseCourante.value =
@@ -118,31 +131,33 @@ class GpsViewModel(
         _vitesseCourante.value = 0f
     }
 
+    fun reinitialiserErreurSauvegarde() { _erreurSauvegarde.value = null }
+
     fun terminerEtSauvegarder(userId: String, typeSeance: String = "cardio", poidsKg: Double = 70.0) {
+        if (_sauvegardeEnCours.value) return
         val distance = _distanceTotale.value
         val duree = _dureeSecondes.value
-        val metFacteur = when (typeSeance) {
-            "course"      -> 8.0
-            "velo"        -> 7.5
-            "marche"      -> 3.5
-            "musculation" -> 6.0
-            else          -> 7.0  // cardio générique
-        }
-        val dureeHeures = duree.toDouble() / 3600.0
         val seance = Seance(
             userId = userId,
             date = System.currentTimeMillis(),
             dureeMinutes = maxOf(1, duree / 60),
             type = typeSeance,
-            caloriesDepensees = (metFacteur * poidsKg * dureeHeures).coerceAtLeast(0.0)
+            caloriesDepensees = calculerCalories(typeSeance, poidsKg, duree)
         )
         arreterEnregistrement()
+        _sauvegardeEnCours.value = true
         viewModelScope.launch {
             objectifRepository.ajouterSeance(seance)
+                .onSuccess {
+                    _trajetGps.value = emptyList()
+                    _distanceTotale.value = 0f
+                    _dureeSecondes.value = 0
+                }
+                .onFailure { e ->
+                    _erreurSauvegarde.value = e.message ?: "Impossible de sauvegarder la séance"
+                }
+            _sauvegardeEnCours.value = false
         }
-        _trajetGps.value = emptyList()
-        _distanceTotale.value = 0f
-        _dureeSecondes.value = 0
     }
 
     override fun onCleared() {
@@ -150,6 +165,22 @@ class GpsViewModel(
     }
 
     companion object {
+        fun metFacteur(typeSeance: String): Double = when (typeSeance) {
+            "course"      -> 8.0
+            "velo"        -> 7.5
+            "natation"    -> 7.0
+            "cardio"      -> 7.0
+            "musculation" -> 6.0
+            "marche"      -> 3.5
+            "yoga"        -> 3.0
+            else          -> 5.0
+        }
+
+        fun calculerCalories(typeSeance: String, poidsKg: Double, dureeSecondes: Int): Double {
+            val dureeHeures = dureeSecondes.toDouble() / 3600.0
+            return (metFacteur(typeSeance) * poidsKg * dureeHeures).coerceAtLeast(0.0)
+        }
+
         fun factory(application: Application): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")

@@ -101,7 +101,8 @@ fun ObjectifsScreen(
         }
     }
 
-    LaunchedEffect(Unit) {
+    // Key on viewModel instance to avoid duplicate collectors if screen re-enters composition
+    LaunchedEffect(viewModel) {
         viewModel.celebrationEvent.collect { message ->
             celebrationMessage = message
             showCelebration = true

@@ -58,7 +58,9 @@ class ScoringViewModel : ViewModel() {
         seancesDetails: List<SeanceDetail> = emptyList()
     ): ScoreHebdomadaire {
         val scoreActivite = seancesDetails.sumOf { s ->
-            s.dureeMinutes * metFacteur(s.typeSeance) * 0.1
+            // Cap at 10h per session to prevent fraudulent score inflation
+            val dureeValide = s.dureeMinutes.coerceIn(0, 600)
+            dureeValide * metFacteur(s.typeSeance) * 0.1
         }
 
         val scoreNutrition = progressions.sumOf { p ->

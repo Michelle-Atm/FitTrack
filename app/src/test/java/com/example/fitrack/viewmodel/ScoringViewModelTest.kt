@@ -107,6 +107,25 @@ class ScoringViewModelTest {
         assertTrue("Score total doit être >= 0", result.total >= 0.0)
     }
 
+    // ── Cap dureeMinutes (anti-fraude) ────────────────────────────────────────
+
+    @Test
+    fun `dureeMinutes superieure a 600 est plafonnee pour le score`() {
+        // 1000 min séance ne doit pas donner plus que 600 min
+        val fraudeuse  = listOf(SeanceDetail(dureeMinutes = 1000, typeSeance = "course"))
+        val legitime   = listOf(SeanceDetail(dureeMinutes = 600,  typeSeance = "course"))
+        val scoreFraude  = vm.calculerScoreInterne(emptyList(), User(), fraudeuse).scoreActivite
+        val scoreLegit   = vm.calculerScoreInterne(emptyList(), User(), legitime).scoreActivite
+        assertEquals(scoreLegit, scoreFraude, 0.001)
+    }
+
+    @Test
+    fun `dureeMinutes negative est traitee comme zero`() {
+        val negativeSeance = listOf(SeanceDetail(dureeMinutes = -10, typeSeance = "course"))
+        val result = vm.calculerScoreInterne(emptyList(), User(), negativeSeance)
+        assertEquals(0.0, result.scoreActivite, 0.001)
+    }
+
     // ── MET facteurs ─────────────────────────────────────────────────────────
 
     @Test

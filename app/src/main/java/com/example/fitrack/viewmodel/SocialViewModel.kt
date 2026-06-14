@@ -7,6 +7,7 @@ import com.example.fitrack.model.Invitation
 import com.example.fitrack.model.ProfilPublic
 import com.example.fitrack.repository.SocialRepository
 import com.example.fitrack.repository.firestore.FirestoreSocialRepository
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -50,10 +51,14 @@ class SocialViewModel(
     var monUserId: String = ""
         private set
 
+    private var classementJob: Job? = null
+
     fun chargerClassement(userId: String, categorie: String) {
         monUserId = userId
         _maCategorie.value = categorie
-        viewModelScope.launch {
+        // Cancel any previous collection to avoid duplicate listeners
+        classementJob?.cancel()
+        classementJob = viewModelScope.launch {
             _isChargement.value = true
             socialRepository.observerClassement()
                 .catch { _isChargement.value = false }

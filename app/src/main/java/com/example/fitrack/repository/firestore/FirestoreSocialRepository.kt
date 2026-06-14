@@ -22,6 +22,7 @@ class FirestoreSocialRepository(
     override suspend fun lireClassement(): Result<List<ProfilPublic>> = try {
         val snapshot = db.collection(COLLECTION)
             .orderBy("scoreHebdo", Query.Direction.DESCENDING)
+            .limit(200)
             .get()
             .await()
         Result.success(
@@ -36,6 +37,7 @@ class FirestoreSocialRepository(
     override fun observerClassement(): Flow<List<ProfilPublic>> = callbackFlow {
         val listener = db.collection(COLLECTION)
             .orderBy("scoreHebdo", Query.Direction.DESCENDING)
+            .limit(200)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) { close(error); return@addSnapshotListener }
                 val profils = snapshot?.documents?.mapNotNull { doc ->
