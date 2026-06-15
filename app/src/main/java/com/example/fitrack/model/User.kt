@@ -1,5 +1,7 @@
 package com.example.fitrack.model
 
+import com.google.firebase.firestore.PropertyName
+
 data class User(
     val uid: String = "",
     val email: String = "",
@@ -18,6 +20,7 @@ data class User(
     val avatarEspece: String = "",   // "renard"|"pingouin"|"panda"|"axolotl" — vide = choix non fait
     val streakJours: Int = 0,        // jours consécutifs d'activité
     val dateCreation: Long = 0L,
+    @get:PropertyName("isAdmin")
     val isAdmin: Boolean = false,    // posé manuellement depuis la console Firebase
     val suspendu: Boolean = false    // suspension par un admin — bloque la connexion
 )

@@ -102,6 +102,7 @@ class ObjectifViewModel(
                     chargerSeancesRecentes(userId)
                 }
                 .onFailure {
+                    android.util.Log.e("ObjectifViewModel", "Erreur lors du logging de séance: ", it)
                     _objectifUiState.value = ObjectifUiState.Erreur(it.message ?: "Impossible de logger la séance")
                 }
         }
@@ -232,6 +233,7 @@ class ObjectifViewModel(
                 if (objectifAtteint(maj)) _celebrationEvent.tryEmit("Objectif du jour atteint ! 🎉")
                 objectifRepository.mettreAJourObjectif(maj)
                     .onFailure {
+                        android.util.Log.e("ObjectifViewModel", "Erreur lors de la mise à jour de l'objectif: ", it)
                         // Rollback to previous state if Firestore write fails
                         _objectifUiState.value = ObjectifUiState.Succes(calculerProgression(courant))
                     }
@@ -247,6 +249,9 @@ class ObjectifViewModel(
                             .onSuccess {
                                 _objectifUiState.value = ObjectifUiState.Succes(calculerProgression(maj))
                                 if (objectifAtteint(maj)) _celebrationEvent.tryEmit("Objectif du jour atteint ! 🎉")
+                            }
+                            .onFailure {
+                                android.util.Log.e("ObjectifViewModel", "Erreur lors du fallback de mise à jour de l'objectif: ", it)
                             }
                     }
             }

@@ -3,6 +3,7 @@ package com.example.fitrack.navigation
 import android.app.Application
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -100,6 +101,24 @@ fun FitTrackNavGraph(
     val user = (uiState as? AuthViewModel.AuthUiState.Succes)?.utilisateur ?: utilisateurActuel
     val userId = user?.uid ?: ""
 
+    val socialRepository = remember { com.example.fitrack.repository.firestore.FirestoreSocialRepository() }
+    LaunchedEffect(user) {
+        val currUser = user
+        if (currUser != null && currUser.uid.isNotEmpty()) {
+            socialRepository.mettreAJourProfil(
+                com.example.fitrack.model.ProfilPublic(
+                    userId = currUser.uid,
+                    nom = currUser.nom.ifBlank { currUser.email.substringBefore("@") },
+                    avatarEspece = currUser.avatarEspece.ifBlank { "renard" },
+                    scoreHebdo = currUser.xp.toDouble(),
+                    categorie = currUser.experience,
+                    xpTotal = currUser.xp,
+                    niveauActuel = currUser.niveau
+                )
+            )
+        }
+    }
+
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route?.substringBefore("?")
 
@@ -129,7 +148,7 @@ fun FitTrackNavGraph(
                 )
             }
             composable(ROUTE_HOME) {
-                HomeScreen(user = user, navController = navController)
+                HomeScreen(user = user, navController = navController, objectifViewModel = objectifViewModel)
             }
             composable(ROUTE_PROFIL) {
                 ProfilScreen(

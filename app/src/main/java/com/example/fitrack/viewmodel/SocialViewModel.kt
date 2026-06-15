@@ -52,6 +52,7 @@ class SocialViewModel(
         private set
 
     private var classementJob: Job? = null
+    private var isSeeding = false
 
     fun chargerClassement(userId: String, categorie: String) {
         monUserId = userId
@@ -63,9 +64,28 @@ class SocialViewModel(
             socialRepository.observerClassement()
                 .catch { _isChargement.value = false }
                 .collect { profils ->
+                    if (!isSeeding && (profils.isEmpty() || (profils.size == 1 && profils.first().userId == userId))) {
+                        isSeeding = true
+                        seedDummyUsers(socialRepository)
+                    }
                     traiterProfils(profils, userId, categorie)
                     _isChargement.value = false
                 }
+        }
+    }
+
+    private fun seedDummyUsers(repo: SocialRepository) {
+        viewModelScope.launch {
+            val dummyList = listOf(
+                ProfilPublic(userId = "dummy_1", nom = "Arthur", avatarEspece = "axolotl", scoreHebdo = 1200.0, categorie = "debutant", niveauActuel = 5, xpTotal = 1200),
+                ProfilPublic(userId = "dummy_2", nom = "Sophia", avatarEspece = "pingouin", scoreHebdo = 950.0, categorie = "debutant", niveauActuel = 4, xpTotal = 950),
+                ProfilPublic(userId = "dummy_3", nom = "Thomas", avatarEspece = "panda", scoreHebdo = 750.0, categorie = "debutant", niveauActuel = 3, xpTotal = 750),
+                ProfilPublic(userId = "dummy_4", nom = "Emma", avatarEspece = "renard", scoreHebdo = 400.0, categorie = "debutant", niveauActuel = 2, xpTotal = 400),
+                ProfilPublic(userId = "dummy_5", nom = "Lucas", avatarEspece = "axolotl", scoreHebdo = 150.0, categorie = "debutant", niveauActuel = 1, xpTotal = 150)
+            )
+            for (dummy in dummyList) {
+                repo.mettreAJourProfil(dummy)
+            }
         }
     }
 

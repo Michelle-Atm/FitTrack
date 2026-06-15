@@ -26,7 +26,7 @@ class FirestoreObjectifRepository(
         return try {
             val doc = db.collection(COLLECTION_OBJECTIFS).document(docId).get().await()
             val objectif = if (doc.exists()) {
-                doc.toObject(Objectif::class.java) ?: Objectif(id = docId, userId = userId, date = date)
+                doc.toObject(Objectif::class.java)?.copy(id = doc.id, userId = userId, date = date) ?: Objectif(id = docId, userId = userId, date = date)
             } else {
                 val nouveauObjectif = Objectif(id = docId, userId = userId, date = date)
                 db.collection(COLLECTION_OBJECTIFS).document(docId).set(nouveauObjectif).await()
@@ -59,13 +59,12 @@ class FirestoreObjectifRepository(
 
     override suspend fun seancesUtilisateur(userId: String, dateDebut: Long, dateFin: Long): Result<List<Seance>> {
         return try {
-            // No orderBy to avoid requiring a composite index — sorted in Kotlin instead
+            // Fetch by userId only to avoid composite index requirement
             val snapshot = db.collection(COLLECTION_SEANCES)
                 .whereEqualTo("userId", userId)
-                .whereGreaterThanOrEqualTo("date", dateDebut)
-                .whereLessThan("date", dateFin)
                 .get().await()
             val seances = snapshot.toObjects(Seance::class.java)
+                .filter { it.date in dateDebut until dateFin }
                 .sortedByDescending { it.date }
             Result.success(seances)
         } catch (e: FirebaseFirestoreException) {

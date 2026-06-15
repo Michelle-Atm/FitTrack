@@ -2,6 +2,7 @@ package com.example.fitrack.interface_ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -297,35 +298,39 @@ fun ProfilScreen(
             ) {
                 SectionLabel("MON PROFIL")
 
-                // Objectif chips
-                SectionLabel("OBJECTIF")
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    goalOptions.forEach { (id, label) ->
-                        val sel = id == objectif
-                        androidx.compose.material3.FilterChip(
-                            selected = sel,
-                            onClick = { objectif = id },
-                            label = { Text(label, fontSize = 11.sp, fontWeight = FontWeight.Bold) },
-                            shape = RoundedCornerShape(999.dp),
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = MintFit,
-                                selectedLabelColor = DarkText,
-                                containerColor = CardBG,
-                                labelColor = TextDim
-                            ),
-                            border = FilterChipDefaults.filterChipBorder(
-                                selected = sel, enabled = true,
-                                selectedBorderColor = MintFit,
-                                borderColor = Border
+                // Objectif Section
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SectionLabel("OBJECTIF")
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        goalOptions.forEach { (id, label) ->
+                            val sel = id == objectif
+                            androidx.compose.material3.FilterChip(
+                                selected = sel,
+                                onClick = { objectif = id },
+                                label = { Text(label, fontSize = 11.sp, fontWeight = FontWeight.Bold) },
+                                shape = RoundedCornerShape(999.dp),
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = MintFit,
+                                    selectedLabelColor = DarkText,
+                                    containerColor = CardBG,
+                                    labelColor = TextDim
+                                ),
+                                border = FilterChipDefaults.filterChipBorder(
+                                    selected = sel, enabled = true,
+                                    selectedBorderColor = MintFit,
+                                    borderColor = Border
+                                )
                             )
-                        )
+                        }
                     }
                 }
 
-                // Poids / Taille
+                // Poids / Taille (Informations physiques)
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedTextField(
                         value = poids, onValueChange = { poids = it },
@@ -374,105 +379,111 @@ fun ProfilScreen(
                 }
 
                 // Allergies
-                SectionLabel("ALLERGIES")
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    allergies.forEach { a ->
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SectionLabel("ALLERGIES")
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        allergies.forEach { a ->
+                            Row(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(999.dp))
+                                    .background(CardBG)
+                                    .border(1.dp, Border, RoundedCornerShape(999.dp))
+                                    .padding(start = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(a, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold), color = Color.White)
+                                IconButton(
+                                    onClick = { allergies = allergies - a },
+                                    modifier = Modifier.size(28.dp)
+                                ) {
+                                    Icon(Icons.Filled.Close, null, tint = TextDim, modifier = Modifier.size(11.dp))
+                                }
+                            }
+                        }
                         Row(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(999.dp))
-                                .background(CardBG)
-                                .border(1.dp, Border, RoundedCornerShape(999.dp))
-                                .padding(start = 12.dp),
+                                .border(1.dp, BorderStr, RoundedCornerShape(999.dp))
+                                .padding(horizontal = 12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(a, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold), color = Color.White)
-                            IconButton(
-                                onClick = { allergies = allergies - a },
-                                modifier = Modifier.size(28.dp)
-                            ) {
-                                Icon(Icons.Filled.Close, null, tint = TextDim, modifier = Modifier.size(11.dp))
-                            }
-                        }
-                    }
-                    Row(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(999.dp))
-                            .border(1.dp, BorderStr, RoundedCornerShape(999.dp))
-                            .padding(horizontal = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        OutlinedTextField(
-                            value = newAllergy,
-                            onValueChange = { newAllergy = it },
-                            placeholder = { Text("Ajouter", color = TextDim, fontSize = 12.sp) },
-                            modifier = Modifier.size(width = 88.dp, height = 40.dp),
-                            singleLine = true,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                unfocusedBorderColor = Color.Transparent,
-                                focusedBorderColor = Color.Transparent,
-                                unfocusedTextColor = Color.White, focusedTextColor = Color.White
+                            OutlinedTextField(
+                                value = newAllergy,
+                                onValueChange = { newAllergy = it },
+                                placeholder = { Text("Ajouter", color = TextDim, fontSize = 12.sp) },
+                                modifier = Modifier.size(width = 88.dp, height = 40.dp),
+                                singleLine = true,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    unfocusedBorderColor = Color.Transparent,
+                                    focusedBorderColor = Color.Transparent,
+                                    unfocusedTextColor = Color.White, focusedTextColor = Color.White
+                                )
                             )
-                        )
-                        IconButton(
-                            onClick = {
-                                if (newAllergy.isNotBlank()) {
-                                    allergies = allergies + newAllergy.trim()
-                                    newAllergy = ""
-                                }
-                            },
-                            modifier = Modifier.size(24.dp)
-                        ) {
-                            Icon(Icons.Filled.Add, null, tint = TextDim, modifier = Modifier.size(12.dp))
+                            IconButton(
+                                onClick = {
+                                    if (newAllergy.isNotBlank()) {
+                                        allergies = allergies + newAllergy.trim()
+                                        newAllergy = ""
+                                    }
+                                },
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(Icons.Filled.Add, null, tint = TextDim, modifier = Modifier.size(12.dp))
+                            }
                         }
                     }
                 }
 
                 // Disponibilités
-                SectionLabel("DISPONIBILITÉS")
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    weekdays.forEachIndexed { i, label ->
-                        val key = weekdayKeys[i]
-                        val sel = key in disponibilites
-                        Button(
-                            onClick = {
-                                disponibilites = if (sel) disponibilites - key else disponibilites + key
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .size(40.dp),
-                            contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (sel) MintFit else CardBG,
-                                contentColor = if (sel) DarkText else TextDim
-                            ),
-                            shape = RoundedCornerShape(10.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, if (sel) MintFit else Border)
-                        ) {
-                            Text(label, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold)
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SectionLabel("DISPONIBILITÉS")
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        weekdays.forEachIndexed { i, label ->
+                            val key = weekdayKeys[i]
+                            val sel = key in disponibilites
+                            Button(
+                                onClick = {
+                                    disponibilites = if (sel) disponibilites - key else disponibilites + key
+                                },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .size(40.dp),
+                                contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (sel) MintFit else CardBG,
+                                    contentColor = if (sel) DarkText else TextDim
+                                ),
+                                shape = RoundedCornerShape(10.dp),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, if (sel) MintFit else Border)
+                            ) {
+                                Text(label, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold)
+                            }
                         }
                     }
                 }
 
-                // Dark mode toggle
-                SectionLabel("APPARENCE")
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("Mode sombre", style = MaterialTheme.typography.bodyMedium, color = Color.White)
-                    Switch(
-                        checked = isDarkMode,
-                        onCheckedChange = { onToggleDarkMode() },
-                        modifier = Modifier.semantics { testTag = "profil_dark_mode_switch" },
-                        colors = androidx.compose.material3.SwitchDefaults.colors(
-                            checkedThumbColor = MintFit,
-                            checkedTrackColor = MintFit.copy(alpha = 0.3f)
+                // Apparence / Dark mode toggle
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SectionLabel("APPARENCE")
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Mode sombre", style = MaterialTheme.typography.bodyMedium, color = Color.White)
+                        Switch(
+                            checked = isDarkMode,
+                            onCheckedChange = { onToggleDarkMode() },
+                            modifier = Modifier.semantics { testTag = "profil_dark_mode_switch" },
+                            colors = androidx.compose.material3.SwitchDefaults.colors(
+                                checkedThumbColor = MintFit,
+                                checkedTrackColor = MintFit.copy(alpha = 0.3f)
+                            )
                         )
-                    )
+                    }
                 }
 
                 // Save button

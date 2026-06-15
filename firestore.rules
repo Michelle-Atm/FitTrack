@@ -29,8 +29,8 @@ service cloud.firestore {
 
       // Users can only write their own profile; admins fields are protected
       allow create: if isOwner(userId)
-        && !('isAdmin' in request.resource.data)
-        && !('suspendu' in request.resource.data);
+        && (!('isAdmin' in request.resource.data) || request.resource.data.isAdmin == false)
+        && (!('suspendu' in request.resource.data) || request.resource.data.suspendu == false);
 
       allow update: if (isOwner(userId)
           // Prevent users from granting themselves admin or unsuspending themselves
