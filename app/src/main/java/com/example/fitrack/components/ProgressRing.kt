@@ -1,5 +1,8 @@
 package com.example.fitrack.components
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -7,6 +10,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -28,7 +32,12 @@ fun ProgressRing(
     color: Color = MintFit,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val progress = if (goal > 0) (value / goal).toFloat().coerceIn(0f, 1f) else 0f
+    val target = if (goal > 0) (value / goal).toFloat().coerceIn(0f, 1f) else 0f
+    val animatedProgress by animateFloatAsState(
+        targetValue = target,
+        animationSpec = tween(durationMillis = 1200, easing = FastOutSlowInEasing),
+        label = "progress_ring"
+    )
 
     Box(
         contentAlignment = Alignment.Center,
@@ -52,7 +61,7 @@ fun ProgressRing(
             drawArc(
                 color = color,
                 startAngle = -90f,
-                sweepAngle = 360f * progress,
+                sweepAngle = 360f * animatedProgress,
                 useCenter = false,
                 style = Stroke(width = strokePx, cap = StrokeCap.Round),
                 topLeft = topLeft,

@@ -73,6 +73,8 @@ import com.example.fitrack.components.SideQuestCard
 import com.example.fitrack.model.Seance
 import com.example.fitrack.model.User
 import com.example.fitrack.ui.theme.AmberFit
+import com.example.fitrack.ui.theme.BossDark1
+import com.example.fitrack.ui.theme.BossDark2
 import com.example.fitrack.ui.theme.CardBG
 import com.example.fitrack.ui.theme.CardBG2
 import com.example.fitrack.ui.theme.CoralFit
@@ -147,7 +149,6 @@ fun ObjectifsScreen(
             .verticalScroll(rememberScrollState())
             .padding(bottom = 32.dp)
     ) {
-        // Header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -193,7 +194,6 @@ fun ObjectifsScreen(
             }
         }
 
-        // Tabs
         TabRow(
             selectedTabIndex = tabSelectionne,
             containerColor = CardBG,
@@ -230,8 +230,6 @@ fun ObjectifsScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         if (tabSelectionne == 0) {
-            // Tab 0: Quotidien
-            // Score + Streak cards
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -255,7 +253,6 @@ fun ObjectifsScreen(
                 )
             }
 
-            // Détail score (accordéon)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -288,7 +285,6 @@ fun ObjectifsScreen(
                 }
             }
 
-            // Objectif rows
             when (val state = objectifState) {
                 is ObjectifViewModel.ObjectifUiState.Chargement -> {
                     Box(
@@ -376,7 +372,6 @@ fun ObjectifsScreen(
                 else -> {}
             }
 
-            // Bouton Logger séance (ouvre BottomSheet)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -411,7 +406,6 @@ fun ObjectifsScreen(
                 }
             }
 
-            // Séances récentes
             if (seancesRecentes.isNotEmpty()) {
                 Column(
                     modifier = Modifier
@@ -440,8 +434,6 @@ fun ObjectifsScreen(
             }
 
         } else if (tabSelectionne == 1) {
-            // Tab 1: Hebdo
-            // Défi Boss
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -455,7 +447,7 @@ fun ObjectifsScreen(
                     modifier = Modifier
                         .background(
                             Brush.linearGradient(
-                                colors = listOf(CardBG, Color(0xFF0D3D2A))
+                                colors = listOf(CardBG, BossDark1)
                             )
                         )
                 ) {
@@ -486,7 +478,7 @@ fun ObjectifsScreen(
                                     .height(8.dp)
                                     .clip(RoundedCornerShape(4.dp)),
                                 color = MintFit,
-                                trackColor = Color(0xFF0E4A2E)
+                                trackColor = BossDark2
                             )
                             Text(
                                 text = "68%",
@@ -536,7 +528,6 @@ fun ObjectifsScreen(
                 }
             }
 
-            // Side Quests
             Column(
                 modifier = Modifier
                     .padding(horizontal = 20.dp)
@@ -572,8 +563,6 @@ fun ObjectifsScreen(
             }
 
         } else {
-            // Tab 2: Evénement
-            // Défi mystère
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -632,7 +621,6 @@ fun ObjectifsScreen(
                 }
             }
 
-            // Mystery Card (Dotted border style)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -680,7 +668,6 @@ fun ObjectifsScreen(
         onDismiss = { showCelebration = false }
     )
 
-    // BottomSheet saisie séance
     if (showSeanceSheet) {
         ModalBottomSheet(
             onDismissRequest = { showSeanceSheet = false },
@@ -738,7 +725,6 @@ private fun SeanceBottomSheet(
             color = Color.White
         )
 
-        // Sélecteur type d'activité
         Text("Type d'activité", style = MaterialTheme.typography.labelSmall, color = TextDim)
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -793,7 +779,6 @@ private fun SeanceBottomSheet(
             }
         }
 
-        // Durée
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -818,7 +803,6 @@ private fun SeanceBottomSheet(
             )
         )
 
-        // Score estimé
         Row(
             modifier = Modifier
                 .fillMaxWidth()

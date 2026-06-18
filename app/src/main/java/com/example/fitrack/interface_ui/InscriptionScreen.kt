@@ -60,6 +60,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.fitrack.model.User
 import com.example.fitrack.ui.theme.AmberFit
 import com.example.fitrack.ui.theme.CardBG
+import com.example.fitrack.ui.theme.DangerFit
 import com.example.fitrack.ui.theme.DarkBG
 import com.example.fitrack.ui.theme.DarkText
 import com.example.fitrack.ui.theme.MintFit
@@ -125,7 +126,7 @@ fun InscriptionScreen(
         imc < 18.5 -> AmberFit
         imc < 25.0 -> MintFit
         imc < 30.0 -> AmberFit
-        else -> Color(0xFFE35C5C)
+        else -> DangerFit
     }
     val imcLabel = when {
         imc == null -> "Renseigne tes données"
@@ -149,7 +150,6 @@ fun InscriptionScreen(
             .background(DarkBG)
             .imePadding()
     ) {
-        // Header + progress
         Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(
@@ -183,7 +183,6 @@ fun InscriptionScreen(
             }
         }
 
-        // Scrollable content
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -213,7 +212,6 @@ fun InscriptionScreen(
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // Bottom bar
         Column(
             modifier = Modifier
                 .padding(horizontal = 20.dp, vertical = 12.dp)
@@ -384,12 +382,6 @@ private fun Step2(
                     )
                     .then(Modifier.padding(14.dp))
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                ) {}
                 TextButton(
                     onClick = { onObjectifChange(g.id) },
                     modifier = Modifier.fillMaxWidth(),

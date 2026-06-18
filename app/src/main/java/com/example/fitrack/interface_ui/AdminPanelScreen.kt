@@ -100,7 +100,6 @@ fun AdminPanelScreen(
         }
     }
 
-    // Confirmation suppression
     utilisateurASupprimer?.let { cible ->
         AlertDialog(
             onDismissRequest = { utilisateurASupprimer = null },
@@ -135,7 +134,6 @@ fun AdminPanelScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // ── Header ────────────────────────────────────────────────────────
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -160,7 +158,6 @@ fun AdminPanelScreen(
                 )
             }
 
-            // ── Onglets ───────────────────────────────────────────────────────
             TabRow(
                 selectedTabIndex = tabIndex,
                 containerColor = CardBG,
@@ -189,7 +186,6 @@ fun AdminPanelScreen(
                 }
             }
 
-            // ── Contenu par onglet ────────────────────────────────────────────
             when (tabIndex) {
                 0 -> OngletUtilisateurs(
                     state = utilisateursState,
@@ -205,8 +201,6 @@ fun AdminPanelScreen(
         }
     }
 }
-
-// ── Onglet Utilisateurs ───────────────────────────────────────────────────────
 
 @Composable
 private fun OngletUtilisateurs(
@@ -267,7 +261,6 @@ private fun CarteUtilisateur(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // Initiale
             Box(
                 modifier = Modifier
                     .size(40.dp)
@@ -308,7 +301,6 @@ private fun CarteUtilisateur(
                 )
             }
 
-            // Suspend toggle
             IconButton(onClick = onSuspendre, modifier = Modifier.size(36.dp)) {
                 Icon(
                     imageVector = if (user.suspendu) Icons.Filled.LockOpen else Icons.Filled.Block,
@@ -318,7 +310,6 @@ private fun CarteUtilisateur(
                 )
             }
 
-            // Delete
             if (!user.isAdmin) {
                 IconButton(onClick = onSupprimer, modifier = Modifier.size(36.dp)) {
                     Icon(
@@ -358,8 +349,6 @@ private fun BadgeSuspendu() {
         Text("SUSPENDU", fontSize = 8.sp, color = DangerFit, fontWeight = FontWeight.ExtraBold)
     }
 }
-
-// ── Onglet Paliers ────────────────────────────────────────────────────────────
 
 @Composable
 private fun OngletPaliers(
@@ -486,8 +475,6 @@ private fun PalierField(
     )
 }
 
-// ── Onglet Stats ──────────────────────────────────────────────────────────────
-
 @Composable
 private fun OngletStats(state: AdminViewModel.StatsState) {
     when (state) {
@@ -558,8 +545,6 @@ private fun CarteStatGlobale(
         }
     }
 }
-
-// ── Composants utilitaires ────────────────────────────────────────────────────
 
 @Composable
 private fun CentreChargement() {

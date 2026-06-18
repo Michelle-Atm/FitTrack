@@ -36,6 +36,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -97,7 +100,12 @@ fun HomeScreen(
     val progression = (objectifState as? ObjectifViewModel.ObjectifUiState.Succes)?.progression
 
     val xpDansNiveau = user.xp % 300
-    val xpProgression = xpDansNiveau.toFloat() / 300f
+    val xpProgressionCible = xpDansNiveau.toFloat() / 300f
+    val xpProgression by animateFloatAsState(
+        targetValue = xpProgressionCible,
+        animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing),
+        label = "xp_progress"
+    )
 
     val rangTitre = when (user.niveau) {
         in 1..3 -> "Recrue Fitness"
@@ -115,7 +123,6 @@ fun HomeScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Streak Badge
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End
@@ -137,7 +144,6 @@ fun HomeScreen(
             }
         }
 
-        // Avatar & Profil Section
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -220,7 +226,6 @@ fun HomeScreen(
             }
         }
 
-        // XP Section
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -253,7 +258,6 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        // Défis du jour (Dynamic objectives cards)
         Text(
             text = "DÉFIS DU JOUR",
             style = MaterialTheme.typography.labelSmall,
@@ -317,7 +321,6 @@ fun HomeScreen(
             }
         }
 
-        // Quick Outils Links
         Text(
             text = "OUTILS DE SUIVI",
             style = MaterialTheme.typography.labelSmall,
@@ -348,7 +351,6 @@ fun HomeScreen(
             ) { navController.navigate(com.example.fitrack.navigation.ROUTE_AVATAR) }
         }
 
-        // Badges Section
         Text(
             text = "BADGES RÉCENTS",
             style = MaterialTheme.typography.labelSmall,

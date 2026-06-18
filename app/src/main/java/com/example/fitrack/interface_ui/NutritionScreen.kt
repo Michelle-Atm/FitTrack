@@ -45,6 +45,7 @@ import com.example.fitrack.model.HeureRepas
 import com.example.fitrack.ui.theme.AmberFit
 import com.example.fitrack.ui.theme.DarkBG
 import com.example.fitrack.ui.theme.DarkText
+import com.example.fitrack.ui.theme.FiberFit
 import com.example.fitrack.ui.theme.MintFit
 import com.example.fitrack.ui.theme.TextDim
 import com.example.fitrack.ui.theme.TextFaint
@@ -107,7 +108,6 @@ fun NutritionScreen(
                 .padding(padding),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 32.dp)
         ) {
-            // Header
             item {
                 Row(
                     modifier = Modifier
@@ -169,7 +169,6 @@ fun NutritionScreen(
                         totaux.calories / comp.pourcentageCalories else 2000.0
                     val pct = (comp.pourcentageCalories * 100).roundToInt()
 
-                    // Progress ring
                     item {
                         Box(
                             modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
@@ -211,7 +210,6 @@ fun NutritionScreen(
                         }
                     }
 
-                    // Macros
                     item {
                         Column(
                             modifier = Modifier.padding(horizontal = 20.dp),
@@ -227,11 +225,10 @@ fun NutritionScreen(
                             MacroBar(label = "Protéines", value = totaux.proteines, goal = protGoal, color = MintFit)
                             MacroBar(label = "Glucides", value = totaux.glucides, goal = glucGoal, color = VioletFit)
                             MacroBar(label = "Lipides", value = totaux.lipides, goal = lipGoal, color = AmberFit)
-                            MacroBar(label = "Fibres", value = totaux.fibres, goal = 30.0, color = Color(0xFF8C8CA8))
+                            MacroBar(label = "Fibres", value = totaux.fibres, goal = 30.0, color = FiberFit)
                         }
                     }
 
-                    // Meals header
                     item {
                         Row(
                             modifier = Modifier

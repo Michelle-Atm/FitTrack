@@ -41,6 +41,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.fitrack.ui.theme.AmberFit
 import com.example.fitrack.ui.theme.CardBG
 import com.example.fitrack.ui.theme.CardBG2
+import com.example.fitrack.ui.theme.DangerFit
 import com.example.fitrack.ui.theme.DarkBG
 import com.example.fitrack.ui.theme.MintFit
 import com.example.fitrack.ui.theme.TextDim
@@ -112,7 +113,6 @@ fun ProfilPublicScreen(
         ) {
             Spacer(Modifier.height(16.dp))
 
-            // Avatar circle
             Box(
                 modifier = Modifier
                     .size(100.dp)
@@ -123,7 +123,6 @@ fun ProfilPublicScreen(
                 Text(text = emojiAnimal(p.avatarEspece), fontSize = 52.sp)
             }
 
-            // Nom + catégorie
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = p.nom.ifBlank { "Joueur" },
@@ -146,7 +145,6 @@ fun ProfilPublicScreen(
                 }
             }
 
-            // Stats cards
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -183,7 +181,6 @@ fun ProfilPublicScreen(
                 )
             }
 
-            // Avatar state card
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = CardBG2),
@@ -249,7 +246,7 @@ private fun StatPublicCard(
 private fun categorieColor(categorie: String): Color = when (categorie) {
     "debutant"      -> MintFit
     "intermediaire" -> AmberFit
-    "avance"        -> Color(0xFFE35C5C)
+    "avance"        -> DangerFit
     else            -> TextDim
 }
 

@@ -52,6 +52,7 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import com.example.fitrack.components.PermissionBox
 import com.example.fitrack.ui.theme.AmberFit
 import com.example.fitrack.ui.theme.CardBG
+import com.example.fitrack.ui.theme.DangerFit
 import com.example.fitrack.ui.theme.DarkBG
 import com.example.fitrack.ui.theme.DarkText
 import com.example.fitrack.ui.theme.MintFit
@@ -109,7 +110,7 @@ fun GpsTrajetScreen(gpsViewModel: GpsViewModel, userId: String = "") {
             SnackbarHost(snackbarHostState) { data ->
                 Snackbar(
                     snackbarData = data,
-                    containerColor = Color(0xFFE35C5C),
+                    containerColor = DangerFit,
                     contentColor = Color.White
                 )
             }
@@ -121,7 +122,6 @@ fun GpsTrajetScreen(gpsViewModel: GpsViewModel, userId: String = "") {
             .background(DarkBG)
             .padding(innerPadding)
     ) {
-        // Carte (65%)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -167,7 +167,6 @@ fun GpsTrajetScreen(gpsViewModel: GpsViewModel, userId: String = "") {
             }
         }
 
-        // Panel inférieur (35%)
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -202,7 +201,7 @@ fun GpsTrajetScreen(gpsViewModel: GpsViewModel, userId: String = "") {
                     onClick = { gpsViewModel.toggleEnregistrement() },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (estEnregistrement) DangerFitLocal else MintFit
+                        containerColor = if (estEnregistrement) DangerFit else MintFit
                     ),
                     shape = RoundedCornerShape(12.dp)
                 ) {
@@ -246,10 +245,8 @@ fun GpsTrajetScreen(gpsViewModel: GpsViewModel, userId: String = "") {
             }
         }
     }
-    } // end Scaffold
+    }
 }
-
-private val DangerFitLocal = Color(0xFFE35C5C)
 
 @Composable
 private fun StatBloc(label: String, valeur: String, accent: Color) {

@@ -19,6 +19,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -52,6 +58,7 @@ import com.example.fitrack.ui.theme.CardBG2
 import com.example.fitrack.ui.theme.CoralFit
 import com.example.fitrack.ui.theme.DarkBG
 import com.example.fitrack.ui.theme.MintFit
+import com.example.fitrack.ui.theme.SilverFit
 import com.example.fitrack.ui.theme.TextDim
 import com.example.fitrack.ui.theme.VioletFit
 import com.example.fitrack.utils.emojiAnimal
@@ -89,7 +96,6 @@ fun LeaderboardScreen(
             .fillMaxSize()
             .background(DarkBG)
     ) {
-        // Header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -110,7 +116,6 @@ fun LeaderboardScreen(
             )
         }
 
-        // Tabs
         TabRow(
             selectedTabIndex = tabSelectionne,
             containerColor = CardBG,
@@ -139,7 +144,6 @@ fun LeaderboardScreen(
             )
         }
 
-        // Gold League Badge
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -161,7 +165,6 @@ fun LeaderboardScreen(
             }
         }
 
-        // Sticky User Rank Highlight
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -197,8 +200,16 @@ fun LeaderboardScreen(
 
         Spacer(Modifier.height(8.dp))
 
+        AnimatedContent(
+            targetState = classement,
+            transitionSpec = {
+                (fadeIn() + slideInVertically { it / 8 }) togetherWith
+                    (fadeOut() + slideOutVertically { -it / 8 })
+            },
+            label = "classement_content"
+        ) { listeActive ->
         when {
-            classement.isEmpty() -> {
+            listeActive.isEmpty() -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -211,8 +222,7 @@ fun LeaderboardScreen(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    // Podium top 3
-                    if (classement.size >= 3) {
+                    if (listeActive.size >= 3) {
                         item {
                             Row(
                                 modifier = Modifier
@@ -223,27 +233,27 @@ fun LeaderboardScreen(
                             ) {
                                 PodiumItem(
                                     rang = 2,
-                                    profil = classement[1],
+                                    profil = listeActive[1],
                                     hauteur = 75.dp,
-                                    onClick = if (classement[1].userId != socialViewModel.monUserId) {
-                                        { onClickProfil?.invoke(classement[1].userId) }
+                                    onClick = if (listeActive[1].userId != socialViewModel.monUserId) {
+                                        { onClickProfil?.invoke(listeActive[1].userId) }
                                     } else null
                                 )
                                 PodiumItem(
                                     rang = 1,
-                                    profil = classement[0],
+                                    profil = listeActive[0],
                                     hauteur = 105.dp,
                                     couronne = true,
-                                    onClick = if (classement[0].userId != socialViewModel.monUserId) {
-                                        { onClickProfil?.invoke(classement[0].userId) }
+                                    onClick = if (listeActive[0].userId != socialViewModel.monUserId) {
+                                        { onClickProfil?.invoke(listeActive[0].userId) }
                                     } else null
                                 )
                                 PodiumItem(
                                     rang = 3,
-                                    profil = classement[2],
+                                    profil = listeActive[2],
                                     hauteur = 55.dp,
-                                    onClick = if (classement[2].userId != socialViewModel.monUserId) {
-                                        { onClickProfil?.invoke(classement[2].userId) }
+                                    onClick = if (listeActive[2].userId != socialViewModel.monUserId) {
+                                        { onClickProfil?.invoke(listeActive[2].userId) }
                                     } else null
                                 )
                             }
@@ -251,8 +261,7 @@ fun LeaderboardScreen(
                         }
                     }
 
-                    // List 4+
-                    itemsIndexed(classement.drop(3)) { index, profil ->
+                    itemsIndexed(listeActive.drop(3)) { index, profil ->
                         LeaderboardRow(
                             rang = index + 4,
                             profil = profil,
@@ -267,6 +276,7 @@ fun LeaderboardScreen(
                 }
             }
         }
+        } // AnimatedContent
     }
 }
 
@@ -280,7 +290,7 @@ private fun PodiumItem(
 ) {
     val accentColor = when (rang) {
         1    -> AmberFit
-        2    -> Color(0xFFB4B2A9)
+        2    -> SilverFit
         else -> CoralFit
     }
     val avatarSize = if (rang == 1) 54.dp else 46.dp

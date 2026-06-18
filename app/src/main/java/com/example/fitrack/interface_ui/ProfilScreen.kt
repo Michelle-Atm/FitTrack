@@ -198,7 +198,6 @@ fun ProfilScreen(
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
             )
 
-            // Avatar + XP
             Row(
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -249,7 +248,6 @@ fun ProfilScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Stats grid 2x2
             Row(
                 modifier = Modifier.padding(horizontal = 20.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -291,14 +289,12 @@ fun ProfilScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Editable section
             Column(
                 modifier = Modifier.padding(horizontal = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
                 SectionLabel("MON PROFIL")
 
-                // Objectif Section
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     SectionLabel("OBJECTIF")
                     Row(
@@ -330,7 +326,6 @@ fun ProfilScreen(
                     }
                 }
 
-                // Poids / Taille (Informations physiques)
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedTextField(
                         value = poids, onValueChange = { poids = it },
@@ -352,7 +347,6 @@ fun ProfilScreen(
                     )
                 }
 
-                // IMC card
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = CardBG),
@@ -378,7 +372,6 @@ fun ProfilScreen(
                     }
                 }
 
-                // Allergies
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     SectionLabel("ALLERGIES")
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -434,7 +427,6 @@ fun ProfilScreen(
                     }
                 }
 
-                // Disponibilités
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     SectionLabel("DISPONIBILITÉS")
                     Row(
@@ -465,7 +457,6 @@ fun ProfilScreen(
                     }
                 }
 
-                // Apparence / Dark mode toggle
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     SectionLabel("APPARENCE")
                     Row(
@@ -486,7 +477,6 @@ fun ProfilScreen(
                     }
                 }
 
-                // Save button
                 Button(
                     onClick = {
                         isSaving = true
@@ -524,7 +514,6 @@ fun ProfilScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Bouton admin — visible uniquement pour isAdmin = true
                 if (baseUser.isAdmin) {
                     Button(
                         onClick = onNavigerVersAdmin,
@@ -544,7 +533,6 @@ fun ProfilScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
-                // Logout
                 Button(
                     onClick = { showLogoutDialog = true },
                     modifier = Modifier.fillMaxWidth().height(52.dp).semantics { testTag = "profil_logout_btn" },

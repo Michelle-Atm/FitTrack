@@ -35,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fitrack.ui.theme.AmberFit
+import com.example.fitrack.ui.theme.CardBG
 import com.example.fitrack.ui.theme.MintFit
 import com.example.fitrack.ui.theme.VioletFit
 import kotlinx.coroutines.delay
@@ -108,7 +109,7 @@ fun CelebrationOverlay(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .clip(RoundedCornerShape(20.dp))
-                        .background(Color(0xFF1A1A2E))
+                        .background(CardBG)
                         .padding(horizontal = 40.dp, vertical = 32.dp)
                 ) {
                     Text(text = "🏆", fontSize = 56.sp)
