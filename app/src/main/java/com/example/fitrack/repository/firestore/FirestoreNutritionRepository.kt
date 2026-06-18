@@ -1,5 +1,6 @@
 package com.example.fitrack.repository.firestore
 
+import android.util.Log
 import com.example.fitrack.model.AlimentOFF
 import com.example.fitrack.model.Repas
 import com.example.fitrack.repository.NutritionRepository
@@ -7,6 +8,7 @@ import com.example.fitrack.repository.api.OFFProduct
 import com.example.fitrack.repository.api.OpenFoodFactsApiService
 import com.example.fitrack.repository.api.RetrofitClient
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
 import java.util.Calendar
@@ -22,39 +24,66 @@ class FirestoreNutritionRepository(
     }
 
     override suspend fun ajouterRepas(repas: Repas): Result<Unit> {
+        Log.d("FitTrackRepas", "ajouterRepas - nom: ${repas.nom}, userId: ${repas.userId}, date: ${repas.date}")
         return try {
             val ref = db.collection(COLLECTION_REPAS).document()
             db.collection(COLLECTION_REPAS).document(ref.id).set(repas.copy(id = ref.id)).await()
+            Log.d("FitTrackRepas", "ajouterRepas success - docId: ${ref.id}")
             Result.success(Unit)
         } catch (e: Exception) {
+            Log.e("FitTrackRepas", "ajouterRepas error", e)
             Result.failure(e)
         }
     }
 
     override suspend fun repasJournalier(userId: String, dateDebut: Long, dateFin: Long): Result<List<Repas>> {
+        Log.d("FitTrackRepas", "repasJournalier query - userId: $userId, dateDebut: $dateDebut, dateFin: $dateFin")
         return try {
             val snapshot = db.collection(COLLECTION_REPAS)
                 .whereEqualTo("userId", userId)
-                .whereGreaterThanOrEqualTo("date", dateDebut)
-                .whereLessThan("date", dateFin)
-                .orderBy("date", Query.Direction.ASCENDING)
                 .get().await()
-            Result.success(snapshot.toObjects(Repas::class.java))
+            val repas = snapshot.toObjects(Repas::class.java)
+                .filter { it.date in dateDebut until dateFin }
+                .sortedBy { it.date }
+            Log.d("FitTrackRepas", "repasJournalier success - size: ${repas.size}")
+            for (r in repas) {
+                Log.d("FitTrackRepas", "  repas: ${r.nom}, date: ${r.date}")
+            }
+            Result.success(repas)
+        } catch (e: FirebaseFirestoreException) {
+            Log.e("FitTrackRepas", "repasJournalier firestore error", e)
+            when (e.code) {
+                FirebaseFirestoreException.Code.UNAVAILABLE,
+                FirebaseFirestoreException.Code.NOT_FOUND -> Result.success(emptyList())
+                else -> Result.failure(e)
+            }
         } catch (e: Exception) {
+            Log.e("FitTrackRepas", "repasJournalier exception", e)
             Result.failure(e)
         }
     }
 
     override suspend fun historiqueRepas(userId: String, joursEnArriere: Int): Result<List<Repas>> {
         val dateDebut = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(joursEnArriere.toLong())
+        Log.d("FitTrackRepas", "historiqueRepas query - userId: $userId, dateDebut: $dateDebut")
         return try {
             val snapshot = db.collection(COLLECTION_REPAS)
                 .whereEqualTo("userId", userId)
-                .whereGreaterThanOrEqualTo("date", dateDebut)
-                .orderBy("date", Query.Direction.DESCENDING)
                 .get().await()
-            Result.success(snapshot.toObjects(Repas::class.java))
+            val repas = snapshot.toObjects(Repas::class.java)
+                .filter { it.date >= dateDebut }
+                .sortedByDescending { it.date }
+            Log.d("FitTrackRepas", "historiqueRepas success - size: ${repas.size}")
+            Result.success(repas)
+        } catch (e: FirebaseFirestoreException) {
+            Log.e("FitTrackRepas", "historiqueRepas firestore error", e)
+            when (e.code) {
+                FirebaseFirestoreException.Code.UNAVAILABLE,
+                FirebaseFirestoreException.Code.NOT_FOUND -> Result.success(emptyList())
+                else -> Result.failure(e)
+            }
         } catch (e: Exception) {
+            Log.e("FitTrackRepas", "historiqueRepas exception", e)
             Result.failure(e)
         }
     }

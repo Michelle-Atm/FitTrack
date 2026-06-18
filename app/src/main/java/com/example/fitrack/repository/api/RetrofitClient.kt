@@ -19,19 +19,6 @@ object RetrofitClient {
                     level = HttpLoggingInterceptor.Level.BASIC
                 }
             )
-            .addInterceptor { chain ->
-                var tentative = 0
-                var reponse = chain.proceed(chain.request())
-                while (!reponse.isSuccessful
-                    && reponse.code in listOf(503, 429)
-                    && tentative < 2) {
-                    reponse.close()
-                    tentative++
-                    Thread.sleep(1000L * tentative)
-                    reponse = chain.proceed(chain.request())
-                }
-                reponse
-            }
             .build()
     }
 

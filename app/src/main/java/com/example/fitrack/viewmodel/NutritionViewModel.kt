@@ -72,6 +72,9 @@ class NutritionViewModel(
     private val _historiqueRepas = MutableStateFlow<List<Repas>>(emptyList())
     val historiqueRepas: StateFlow<List<Repas>> = _historiqueRepas.asStateFlow()
 
+    private val _erreurHistorique = MutableStateFlow<String?>(null)
+    val erreurHistorique: StateFlow<String?> = _erreurHistorique.asStateFlow()
+
     fun chargerRepasJournaliers(userId: String, date: Long = debutJournee()) {
         viewModelScope.launch {
             _uiState.value = NutritionUiState.Chargement
@@ -92,10 +95,17 @@ class NutritionViewModel(
     fun chargerHistorique(userId: String, jours: Int = 7) {
         viewModelScope.launch {
             nutritionRepository.historiqueRepas(userId, jours)
-                .onSuccess { _historiqueRepas.value = it }
-                .onFailure { /* échec silencieux : l'historique est un affichage secondaire, pas bloquant */ }
+                .onSuccess {
+                    _historiqueRepas.value = it
+                    _erreurHistorique.value = null
+                }
+                .onFailure { e ->
+                    _erreurHistorique.value = e.message ?: "Impossible de charger l'historique"
+                }
         }
     }
+
+    fun reinitialiserErreurHistorique() { _erreurHistorique.value = null }
 
     fun ajouterRepas(repas: Repas, userId: String) {
         viewModelScope.launch {

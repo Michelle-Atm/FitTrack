@@ -1,6 +1,5 @@
 package com.example.fitrack.interface_ui
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
@@ -19,18 +18,19 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.LocalFireDepartment
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.AdminPanelSettings
+import androidx.compose.material.icons.filled.Pets
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.Switch
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
@@ -46,6 +46,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -56,9 +57,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -67,9 +68,11 @@ import androidx.navigation.NavController
 import com.example.fitrack.components.StatCard
 import com.example.fitrack.ui.theme.AmberFit
 import com.example.fitrack.ui.theme.Border
+import com.example.fitrack.ui.theme.BorderStr
 import com.example.fitrack.ui.theme.CardBG
 import com.example.fitrack.ui.theme.DangerFit
 import com.example.fitrack.ui.theme.DarkBG
+import com.example.fitrack.ui.theme.DarkText
 import com.example.fitrack.ui.theme.MintFit
 import com.example.fitrack.ui.theme.TextDim
 import com.example.fitrack.ui.theme.VioletFit
@@ -87,10 +90,15 @@ private val weekdays = listOf("L", "Ma", "Me", "J", "V", "S", "D")
 private val weekdayKeys = listOf("lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche")
 
 @Composable
-fun ProfilScreen(viewModel: AuthViewModel, navController: NavController) {
+fun ProfilScreen(
+    viewModel: AuthViewModel,
+    navController: NavController,
+    isDarkMode: Boolean = true,
+    onToggleDarkMode: () -> Unit = {},
+    onNavigerVersAdmin: () -> Unit = {}
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val utilisateurActuel by viewModel.utilisateurActuel.collectAsStateWithLifecycle()
-    val keyboardController = LocalSoftwareKeyboardController.current
 
     val userCourant = when (val s = uiState) {
         is AuthViewModel.AuthUiState.Succes -> s.utilisateur
@@ -111,6 +119,8 @@ fun ProfilScreen(viewModel: AuthViewModel, navController: NavController) {
     var allergies by remember(baseUser.uid) { mutableStateOf(baseUser.allergies) }
     var disponibilites by remember(baseUser.uid) { mutableStateOf(baseUser.disponibilites) }
     var newAllergy by remember { mutableStateOf("") }
+    var isSaving by remember { mutableStateOf(false) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
 
     val imc = remember(poids, taille) {
         val p = poids.toDoubleOrNull() ?: 0.0
@@ -124,12 +134,13 @@ fun ProfilScreen(viewModel: AuthViewModel, navController: NavController) {
         imc < 30.0 -> AmberFit
         else -> DangerFit
     }
-    val xpProgress = (baseUser.xp % 500).toFloat() / 500f
+    val xpProgress = (baseUser.xp % 300).toFloat() / 300f
 
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
         viewModel.evenements.collect { evenement ->
+            isSaving = false
             when (evenement) {
                 is AuthViewModel.AuthEvenement.ProfilMisAJour ->
                     snackbarHostState.showSnackbar(
@@ -145,6 +156,28 @@ fun ProfilScreen(viewModel: AuthViewModel, navController: NavController) {
         }
     }
 
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = { Text("Déconnexion", color = Color.White) },
+            text = { Text("Voulez-vous vraiment vous déconnecter ?", color = TextDim) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showLogoutDialog = false
+                    viewModel.deconnexion()
+                }) {
+                    Text("Confirmer", color = DangerFit)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog = false }) {
+                    Text("Annuler", color = Color.White)
+                }
+            },
+            containerColor = CardBG
+        )
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = DarkBG,
@@ -156,86 +189,69 @@ fun ProfilScreen(viewModel: AuthViewModel, navController: NavController) {
                 .background(DarkBG)
                 .verticalScroll(rememberScrollState())
                 .padding(innerPadding)
-                .padding(horizontal = 24.dp)
                 .padding(bottom = 32.dp)
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
-
             Text(
                 text = "Profil",
-                style = MaterialTheme.typography.headlineLarge.copy(
-                    fontWeight = FontWeight.ExtraBold,
-                    letterSpacing = (-1).sp
-                ),
-                color = Color.White
+                style = MaterialTheme.typography.headlineMedium,
+                color = Color.White,
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = CardBG),
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.04f))
+            Row(
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Row(
-                    modifier = Modifier.padding(20.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(72.dp)
+                        .clip(CircleShape)
+                        .background(VioletFit)
                 ) {
-                    Box(
-                        contentAlignment = Alignment.Center,
+                    Icon(
+                        imageVector = Icons.Filled.Pets,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(36.dp)
+                    )
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = baseUser.nom.ifBlank { baseUser.email },
+                        style = MaterialTheme.typography.titleLarge,
+                        color = Color.White
+                    )
+                    Text(
+                        text = "NIVEAU ${baseUser.niveau} · ${if (baseUser.niveau < 3) "Apprenti" else "Expert"}",
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                        color = VioletFit
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    LinearProgressIndicator(
+                        progress = { xpProgress },
                         modifier = Modifier
-                            .size(64.dp)
-                            .clip(CircleShape)
-                            .background(VioletFit.copy(alpha = 0.15f))
-                            .border(1.5.dp, VioletFit, CircleShape)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Person,
-                            contentDescription = null,
-                            tint = VioletFit,
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = baseUser.nom.ifBlank { baseUser.email.split("@").first() },
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                            color = Color.White
-                        )
-                        Text(
-                            text = "LEVEL ${baseUser.niveau} · ${if (baseUser.niveau < 3) "Apprenti" else "Expert"}",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontStyle = androidx.compose.ui.text.font.FontStyle.Normal,
-                                fontWeight = FontWeight.ExtraBold,
-                                letterSpacing = 1.sp
-                            ),
-                            color = VioletFit
-                        )
-                        Spacer(modifier = Modifier.height(10.dp))
-                        LinearProgressIndicator(
-                            progress = { xpProgress },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(6.dp)
-                                .clip(RoundedCornerShape(99.dp)),
-                            color = VioletFit,
-                            trackColor = Color.White.copy(alpha = 0.05f)
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "${baseUser.xp % 500} / 500 XP",
-                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
-                            color = TextDim
-                        )
-                    }
+                            .fillMaxWidth()
+                            .height(8.dp)
+                            .clip(RoundedCornerShape(999.dp)),
+                        color = VioletFit,
+                        trackColor = Color.White.copy(alpha = 0.06f)
+                    )
+                    Text(
+                        text = "${baseUser.xp % 300} / 300 XP",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextDim
+                    )
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(
+                modifier = Modifier.padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
                 StatCard(
                     label = "IMC actuel",
                     value = if (imc > 0) "%.1f".format(imc) else "—",
@@ -244,17 +260,20 @@ fun ProfilScreen(viewModel: AuthViewModel, navController: NavController) {
                 )
                 StatCard(
                     label = "Objectif",
-                    value = goalOptions.firstOrNull { it.first == objectif }?.second ?: "—",
+                    value = goalOptions.firstOrNull { it.first == objectif }?.second?.split(" ")?.firstOrNull() ?: "—",
                     modifier = Modifier.weight(1f)
                 )
             }
-            Spacer(modifier = Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(
+                modifier = Modifier.padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
                 StatCard(
                     label = "Streak",
                     value = "0",
                     unit = "jours",
-                    icon = Icons.Filled.LocalFireDepartment,
+                    icon = Icons.Filled.Pets,
                     iconColor = AmberFit,
                     accent = AmberFit,
                     modifier = Modifier.weight(1f)
@@ -268,33 +287,32 @@ fun ProfilScreen(viewModel: AuthViewModel, navController: NavController) {
                 )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(Color.White.copy(alpha = 0.05f)))
-
             Spacer(modifier = Modifier.height(24.dp))
 
-            Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
+            Column(
+                modifier = Modifier.padding(horizontal = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                SectionLabel("MON PROFIL")
 
-                Column {
-                    SectionLabel("OBJECTIF PRINCIPAL")
-                    Spacer(modifier = Modifier.height(10.dp))
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SectionLabel("OBJECTIF")
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         goalOptions.forEach { (id, label) ->
                             val sel = id == objectif
-                            FilterChip(
+                            androidx.compose.material3.FilterChip(
                                 selected = sel,
                                 onClick = { objectif = id },
-                                label = { Text(label, fontSize = 12.sp, fontWeight = FontWeight.Bold) },
-                                shape = RoundedCornerShape(14.dp),
+                                label = { Text(label, fontSize = 11.sp, fontWeight = FontWeight.Bold) },
+                                shape = RoundedCornerShape(999.dp),
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = MintFit,
-                                    selectedLabelColor = Color(0xFF002817),
+                                    selectedLabelColor = DarkText,
                                     containerColor = CardBG,
                                     labelColor = TextDim
                                 ),
@@ -308,26 +326,23 @@ fun ProfilScreen(viewModel: AuthViewModel, navController: NavController) {
                     }
                 }
 
-                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedTextField(
                         value = poids, onValueChange = { poids = it },
-                        label = { Text("Poids", fontWeight = FontWeight.Medium) },
-                        suffix = { Text("kg", fontWeight = FontWeight.Bold) },
+                        label = { Text("Poids", color = Color.Gray) },
+                        suffix = { Text("kg", color = Color.Gray) },
                         modifier = Modifier.weight(1f),
-                        singleLine = true,
-                        shape = RoundedCornerShape(16.dp),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next),
+                        singleLine = true, shape = RoundedCornerShape(8.dp),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         colors = fieldColorsProfile()
                     )
                     OutlinedTextField(
                         value = taille, onValueChange = { taille = it },
-                        label = { Text("Taille", fontWeight = FontWeight.Medium) },
-                        suffix = { Text("cm", fontWeight = FontWeight.Bold) },
+                        label = { Text("Taille", color = Color.Gray) },
+                        suffix = { Text("cm", color = Color.Gray) },
                         modifier = Modifier.weight(1f),
-                        singleLine = true,
-                        shape = RoundedCornerShape(16.dp),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
-                        keyboardActions = KeyboardActions(onDone = { keyboardController?.hide() }),
+                        singleLine = true, shape = RoundedCornerShape(8.dp),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         colors = fieldColorsProfile()
                     )
                 }
@@ -335,88 +350,85 @@ fun ProfilScreen(viewModel: AuthViewModel, navController: NavController) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = CardBG),
-                    shape = RoundedCornerShape(20.dp),
-                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
+                    shape = RoundedCornerShape(12.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Border)
                 ) {
                     Row(
-                        modifier = Modifier.padding(18.dp).fillMaxWidth(),
+                        modifier = Modifier.padding(14.dp).fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Text("IMC RECALCULÉ", style = MaterialTheme.typography.labelSmall, color = TextDim, letterSpacing = 1.sp)
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(viewModel.categorieIMC(imc), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = Color.White)
+                            Text("IMC RECALCULÉ", style = MaterialTheme.typography.labelSmall, color = TextDim)
+                            Text(viewModel.categorieIMC(imc), style = MaterialTheme.typography.bodySmall, color = TextDim)
                         }
                         Text(
                             text = if (imc > 0) "%.1f".format(imc) else "—",
-                            style = MaterialTheme.typography.headlineMedium.copy(
-                                fontWeight = FontWeight.ExtraBold, letterSpacing = (-0.5).sp
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = (-0.5).sp
                             ),
                             color = imcColor
                         )
                     }
                 }
 
-                Column {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     SectionLabel("ALLERGIES")
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         allergies.forEach { a ->
                             Row(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(12.dp))
+                                    .clip(RoundedCornerShape(999.dp))
                                     .background(CardBG)
-                                    .border(1.dp, Border, RoundedCornerShape(12.dp))
-                                    .padding(start = 12.dp, top = 4.dp, bottom = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    .border(1.dp, Border, RoundedCornerShape(999.dp))
+                                    .padding(start = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(a, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold), color = Color.White)
+                                Text(a, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold), color = Color.White)
                                 IconButton(
                                     onClick = { allergies = allergies - a },
                                     modifier = Modifier.size(28.dp)
                                 ) {
-                                    Icon(Icons.Filled.Close, null, tint = DangerFit, modifier = Modifier.size(14.dp))
+                                    Icon(Icons.Filled.Close, null, tint = TextDim, modifier = Modifier.size(11.dp))
                                 }
                             }
                         }
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    OutlinedTextField(
-                        value = newAllergy,
-                        onValueChange = { newAllergy = it },
-                        placeholder = { Text("Ajouter une allergie...", color = TextDim) },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        shape = RoundedCornerShape(16.dp),
-                        colors = fieldColorsProfile(),
-                        trailingIcon = {
+                        Row(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(999.dp))
+                                .border(1.dp, BorderStr, RoundedCornerShape(999.dp))
+                                .padding(horizontal = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            OutlinedTextField(
+                                value = newAllergy,
+                                onValueChange = { newAllergy = it },
+                                placeholder = { Text("Ajouter", color = TextDim, fontSize = 12.sp) },
+                                modifier = Modifier.size(width = 88.dp, height = 40.dp),
+                                singleLine = true,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    unfocusedBorderColor = Color.Transparent,
+                                    focusedBorderColor = Color.Transparent,
+                                    unfocusedTextColor = Color.White, focusedTextColor = Color.White
+                                )
+                            )
                             IconButton(
                                 onClick = {
                                     if (newAllergy.isNotBlank()) {
                                         allergies = allergies + newAllergy.trim()
                                         newAllergy = ""
                                     }
-                                }
+                                },
+                                modifier = Modifier.size(24.dp)
                             ) {
-                                Icon(Icons.Filled.Add, null, tint = MintFit)
+                                Icon(Icons.Filled.Add, null, tint = TextDim, modifier = Modifier.size(12.dp))
                             }
                         }
-                    )
+                    }
                 }
 
-                Column {
-                    SectionLabel("DISPONIBILITÉS HEBDOMADAIRES")
-                    Spacer(modifier = Modifier.height(10.dp))
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SectionLabel("DISPONIBILITÉS")
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -430,14 +442,14 @@ fun ProfilScreen(viewModel: AuthViewModel, navController: NavController) {
                                 },
                                 modifier = Modifier
                                     .weight(1f)
-                                    .height(44.dp),
+                                    .size(40.dp),
                                 contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = if (sel) MintFit else CardBG,
-                                    contentColor = if (sel) Color(0xFF002817) else TextDim
+                                    contentColor = if (sel) DarkText else TextDim
                                 ),
-                                shape = RoundedCornerShape(14.dp),
-                                border = BorderStroke(1.dp, if (sel) MintFit else Border)
+                                shape = RoundedCornerShape(10.dp),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, if (sel) MintFit else Border)
                             ) {
                                 Text(label, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold)
                             }
@@ -445,55 +457,94 @@ fun ProfilScreen(viewModel: AuthViewModel, navController: NavController) {
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SectionLabel("APPARENCE")
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Mode sombre", style = MaterialTheme.typography.bodyMedium, color = Color.White)
+                        Switch(
+                            checked = isDarkMode,
+                            onCheckedChange = { onToggleDarkMode() },
+                            modifier = Modifier.semantics { testTag = "profil_dark_mode_switch" },
+                            colors = androidx.compose.material3.SwitchDefaults.colors(
+                                checkedThumbColor = MintFit,
+                                checkedTrackColor = MintFit.copy(alpha = 0.3f)
+                            )
+                        )
+                    }
+                }
 
                 Button(
                     onClick = {
+                        isSaving = true
                         val updated = baseUser.copy(
                             poids = poids.toDoubleOrNull() ?: baseUser.poids,
-                            taille = taille.toDoubleOrNull()?.toInt() ?: taille.toIntOrNull() ?: baseUser.taille,
+                            taille = taille.toDoubleOrNull()?.toInt()
+                                ?: taille.toIntOrNull()
+                                ?: baseUser.taille,
                             objectif = objectif,
                             allergies = allergies,
                             disponibilites = disponibilites
                         )
                         viewModel.mettreAJourProfil(updated)
                     },
-                    enabled = uiState !is AuthViewModel.AuthUiState.Chargement,
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MintFit,
-                        disabledContainerColor = MintFit.copy(alpha = 0.3f)
-                    ),
-                    shape = RoundedCornerShape(16.dp)
+                    enabled = !isSaving,
+                    modifier = Modifier.fillMaxWidth().height(52.dp).semantics { testTag = "profil_save_btn" },
+                    colors = ButtonDefaults.buttonColors(containerColor = MintFit),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    if (uiState is AuthViewModel.AuthUiState.Chargement) {
+                    if (isSaving) {
                         CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = Color(0xFF002817),
-                            strokeWidth = 2.5.dp
+                            modifier = Modifier.size(20.dp),
+                            color = DarkText,
+                            strokeWidth = 2.dp
                         )
                     } else {
                         Text(
                             "Enregistrer",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = Color(0xFF002817)
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = DarkText
                         )
                     }
                 }
 
+                Spacer(modifier = Modifier.height(8.dp))
+
+                if (baseUser.isAdmin) {
+                    Button(
+                        onClick = onNavigerVersAdmin,
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                        shape = RoundedCornerShape(12.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.5.dp, VioletFit)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(Icons.Filled.AdminPanelSettings, null, tint = VioletFit, modifier = Modifier.size(16.dp))
+                            Text("Panneau administrateur", color = VioletFit, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
                 Button(
-                    onClick = { viewModel.deconnexion() },
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    onClick = { showLogoutDialog = true },
+                    modifier = Modifier.fillMaxWidth().height(52.dp).semantics { testTag = "profil_logout_btn" },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                    shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(1.5.dp, DangerFit.copy(alpha = 0.3f))
+                    shape = RoundedCornerShape(12.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.5.dp, DangerFit.copy(alpha = 0.4f))
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(Icons.AutoMirrored.Filled.Logout, null, tint = DangerFit, modifier = Modifier.size(18.dp))
+                        Icon(Icons.AutoMirrored.Filled.Logout, null, tint = DangerFit, modifier = Modifier.size(16.dp))
                         Text("Se déconnecter", color = DangerFit, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                     }
                 }
@@ -504,14 +555,7 @@ fun ProfilScreen(viewModel: AuthViewModel, navController: NavController) {
 
 @Composable
 private fun SectionLabel(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.labelSmall.copy(
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 1.sp
-        ),
-        color = TextDim
-    )
+    Text(text, style = MaterialTheme.typography.labelSmall, color = TextDim, modifier = Modifier.padding(top = 4.dp))
 }
 
 @Composable
@@ -521,7 +565,5 @@ private fun fieldColorsProfile() = OutlinedTextFieldDefaults.colors(
     focusedTextColor = Color.White,
     unfocusedTextColor = Color.White,
     unfocusedContainerColor = CardBG,
-    focusedContainerColor = CardBG,
-    focusedLabelColor = MintFit,
-    unfocusedLabelColor = TextDim
+    focusedContainerColor = CardBG
 )

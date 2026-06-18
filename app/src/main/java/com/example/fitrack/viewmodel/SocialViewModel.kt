@@ -1,0 +1,187 @@
+package com.example.fitrack.viewmodel
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import com.example.fitrack.model.Invitation
+import com.example.fitrack.model.ProfilPublic
+import com.example.fitrack.repository.SocialRepository
+import com.example.fitrack.repository.firestore.FirestoreSocialRepository
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.launch
+
+class SocialViewModel(
+    private val socialRepository: SocialRepository
+) : ViewModel() {
+
+    private val _maCategorie = MutableStateFlow("")
+    val maCategorie: StateFlow<String> = _maCategorie.asStateFlow()
+
+    private val _monRang = MutableStateFlow(0)
+    val monRang: StateFlow<Int> = _monRang.asStateFlow()
+
+    private val _monRangCategorie = MutableStateFlow(0)
+    val monRangCategorie: StateFlow<Int> = _monRangCategorie.asStateFlow()
+
+    private val _monScoreHebdo = MutableStateFlow(0.0)
+    val monScoreHebdo: StateFlow<Double> = _monScoreHebdo.asStateFlow()
+
+    private val _classementGlobal = MutableStateFlow<List<ProfilPublic>>(emptyList())
+    val classementGlobal: StateFlow<List<ProfilPublic>> = _classementGlobal.asStateFlow()
+
+    private val _classementCategorie = MutableStateFlow<List<ProfilPublic>>(emptyList())
+    val classementCategorie: StateFlow<List<ProfilPublic>> = _classementCategorie.asStateFlow()
+
+    private val _isChargement = MutableStateFlow(false)
+    val isChargement: StateFlow<Boolean> = _isChargement.asStateFlow()
+
+    private val _profilConsulte = MutableStateFlow<ProfilPublic?>(null)
+    val profilConsulte: StateFlow<ProfilPublic?> = _profilConsulte.asStateFlow()
+
+    private val _invitationsRecues = MutableStateFlow<List<Invitation>>(emptyList())
+    val invitationsRecues: StateFlow<List<Invitation>> = _invitationsRecues.asStateFlow()
+
+    private val _erreurInvitation = MutableStateFlow<String?>(null)
+    val erreurInvitation: StateFlow<String?> = _erreurInvitation.asStateFlow()
+
+    var monUserId: String = ""
+        private set
+
+    private var classementJob: Job? = null
+    private var isSeeding = false
+
+    fun chargerClassement(userId: String, categorie: String) {
+        monUserId = userId
+        _maCategorie.value = categorie
+        // Cancel any previous collection to avoid duplicate listeners
+        classementJob?.cancel()
+        classementJob = viewModelScope.launch {
+            _isChargement.value = true
+            socialRepository.observerClassement()
+                .catch { _isChargement.value = false }
+                .collect { profils ->
+                    if (!isSeeding && (profils.isEmpty() || (profils.size == 1 && profils.first().userId == userId))) {
+                        isSeeding = true
+                        seedDummyUsers(socialRepository)
+                    }
+                    traiterProfils(profils, userId, categorie)
+                    _isChargement.value = false
+                }
+        }
+    }
+
+    private fun seedDummyUsers(repo: SocialRepository) {
+        viewModelScope.launch {
+            val dummyList = listOf(
+                ProfilPublic(userId = "dummy_1", nom = "Arthur", avatarEspece = "axolotl", scoreHebdo = 1200.0, categorie = "debutant", niveauActuel = 5, xpTotal = 1200),
+                ProfilPublic(userId = "dummy_2", nom = "Sophia", avatarEspece = "pingouin", scoreHebdo = 950.0, categorie = "debutant", niveauActuel = 4, xpTotal = 950),
+                ProfilPublic(userId = "dummy_3", nom = "Thomas", avatarEspece = "panda", scoreHebdo = 750.0, categorie = "debutant", niveauActuel = 3, xpTotal = 750),
+                ProfilPublic(userId = "dummy_4", nom = "Emma", avatarEspece = "renard", scoreHebdo = 400.0, categorie = "debutant", niveauActuel = 2, xpTotal = 400),
+                ProfilPublic(userId = "dummy_5", nom = "Lucas", avatarEspece = "axolotl", scoreHebdo = 150.0, categorie = "debutant", niveauActuel = 1, xpTotal = 150)
+            )
+            for (dummy in dummyList) {
+                repo.mettreAJourProfil(dummy)
+            }
+        }
+    }
+
+    fun publierMonProfil(
+        userId: String,
+        nom: String,
+        avatarEspece: String,
+        avatarEtat: String,
+        categorie: String,
+        scoreHebdo: Double,
+        xpTotal: Int,
+        niveauActuel: Int
+    ) {
+        viewModelScope.launch {
+            socialRepository.mettreAJourProfil(
+                ProfilPublic(
+                    userId = userId,
+                    nom = nom,
+                    avatarEspece = avatarEspece,
+                    avatarEtat = avatarEtat,
+                    scoreHebdo = scoreHebdo,
+                    categorie = categorie,
+                    xpTotal = xpTotal,
+                    niveauActuel = niveauActuel
+                )
+            )
+        }
+    }
+
+    fun chargerProfilPublic(userId: String) {
+        viewModelScope.launch {
+            socialRepository.lireProfilPublic(userId).onSuccess { profil ->
+                _profilConsulte.value = profil
+            }
+        }
+    }
+
+    fun mettreAJourMonProfil(profil: ProfilPublic) {
+        viewModelScope.launch {
+            socialRepository.mettreAJourProfil(profil)
+        }
+    }
+
+    fun envoyerInvitation(envoyeurId: String, envoyeurNom: String, destinataireId: String) {
+        viewModelScope.launch {
+            val invitation = Invitation(
+                envoyeurId = envoyeurId,
+                envoyeurNom = envoyeurNom,
+                destinataireId = destinataireId
+            )
+            socialRepository.envoyerInvitation(invitation)
+                .onFailure { _erreurInvitation.value = it.message ?: "Erreur d'invitation" }
+        }
+    }
+
+    fun chargerMesInvitations(userId: String) {
+        viewModelScope.launch {
+            socialRepository.mesInvitationsRecues(userId)
+                .onSuccess { _invitationsRecues.value = it }
+                .onFailure { _erreurInvitation.value = it.message ?: "Erreur de chargement" }
+        }
+    }
+
+    fun repondreInvitation(invitationId: String, accepte: Boolean, userId: String) {
+        viewModelScope.launch {
+            socialRepository.repondreInvitation(invitationId, accepte)
+                .onSuccess { chargerMesInvitations(userId) }
+                .onFailure { _erreurInvitation.value = it.message ?: "Erreur de réponse" }
+        }
+    }
+
+    fun reinitialiserErreur() { _erreurInvitation.value = null }
+
+    private fun traiterProfils(profils: List<ProfilPublic>, userId: String, categorie: String) {
+        val global = profils
+            .sortedByDescending { it.scoreHebdo }
+            .mapIndexed { index, p -> p.copy(rang = index + 1) }
+        _classementGlobal.value = global
+
+        val monProfil = global.firstOrNull { it.userId == userId }
+        _monRang.value = monProfil?.rang ?: 0
+        _monScoreHebdo.value = monProfil?.scoreHebdo ?: 0.0
+
+        val parCategorie = global
+            .filter { it.categorie == categorie }
+            .mapIndexed { index, p -> p.copy(rang = index + 1) }
+        _classementCategorie.value = parCategorie
+        _monRangCategorie.value = parCategorie.firstOrNull { it.userId == userId }?.rang ?: 0
+    }
+
+    companion object {
+        val Factory: ViewModelProvider.Factory =
+            object : ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST")
+                override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                    SocialViewModel(FirestoreSocialRepository()) as T
+            }
+    }
+}
